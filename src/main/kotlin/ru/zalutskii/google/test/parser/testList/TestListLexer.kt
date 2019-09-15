@@ -14,9 +14,9 @@ class TestListLexer() : ITestListLexer {
         }
 
         return if (line.startsWith("  ")) {
-            Token(Token.Type.TEST_FUNCTION, line.removePrefix("  "))
+            Token(Token.Type.TEST_FUNCTION, line.removePrefix("  ").substringBefore("  "))
         } else {
-            Token(Token.Type.TEST_CASE, line.removeSuffix("."))
+            Token(Token.Type.TEST_CASE, line.substringBefore("."))
         }
     }
 }
