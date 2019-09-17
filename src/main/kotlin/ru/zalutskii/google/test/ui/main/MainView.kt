@@ -72,6 +72,10 @@ class MainView : MainViewInput {
         logArea.text = log
     }
 
+    override fun setTestSelectionEnabled(enabled: Boolean) {
+        testTree.isEnabled = enabled
+    }
+
     private fun createUi() {
         frame.title = "GoogleTestUI"
         frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
@@ -87,8 +91,14 @@ class MainView : MainViewInput {
         frame.contentPane.add(toolbar)
 
         testTree.model = null
-        testTree.isRootVisible = false
         testTree.border = BorderFactory.createEmptyBorder(4, 4, 4, 4)
+        testTree.addTreeSelectionListener {
+            if (it.newLeadSelectionPath != null) {
+                output?.didSelectTest(it.newLeadSelectionPath)
+            } else {
+                output?.didSelectTest(testTree.getPathForRow(0))
+            }
+        }
 
 
         val treeScrollPane = JScrollPane(testTree)

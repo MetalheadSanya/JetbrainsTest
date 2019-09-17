@@ -1,4 +1,4 @@
-package ru.zalutskii.google.test.service
+package ru.zalutskii.google.test.service.process
 
 import java.io.BufferedReader
 import java.io.File

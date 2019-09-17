@@ -2,8 +2,10 @@ package ru.zalutskii.google.test
 
 import ru.zalutskii.google.test.parser.testList.TestListLexer
 import ru.zalutskii.google.test.parser.testList.TestListParser
-import ru.zalutskii.google.test.service.TestProcess
+import ru.zalutskii.google.test.parser.testLog.TestLogLexer
+import ru.zalutskii.google.test.service.process.TestProcess
 import ru.zalutskii.google.test.service.TestService
+import ru.zalutskii.google.test.service.logPerformer.LogPerformer
 import ru.zalutskii.google.test.ui.main.MainPresenter
 import ru.zalutskii.google.test.ui.main.MainRouter
 import ru.zalutskii.google.test.ui.main.MainView
@@ -18,9 +20,15 @@ fun createAndShowGui() {
 
     val process = TestProcess()
 
-    val lexer = TestListLexer()
-    val parser = TestListParser(lexer)
+    val listLexer = TestListLexer()
+    val parser = TestListParser(listLexer)
+
     val service = TestService(parser,process)
+
+    val logLexer = TestLogLexer()
+    val logPerformer = LogPerformer(logLexer)
+
+    logPerformer.output = service
 
     router.parentFrame = view.frame
 
@@ -30,6 +38,7 @@ fun createAndShowGui() {
     presenter.service = service
     presenter.view = view
 
+    service.logPerformer = logPerformer
     service.output = presenter
 
     view.show()
@@ -37,9 +46,9 @@ fun createAndShowGui() {
 
 fun main(args: Array<String>) {
     System.setProperty("apple.laf.useScreenMenuBar", "true")
-    System.setProperty("apple.awt.fileDialogForDirectories", "true");
-    JFrame.setDefaultLookAndFeelDecorated(true);
-    JDialog.setDefaultLookAndFeelDecorated(true);
+    System.setProperty("apple.awt.fileDialogForDirectories", "true")
+    JFrame.setDefaultLookAndFeelDecorated(true)
+    JDialog.setDefaultLookAndFeelDecorated(true)
 
     EventQueue.invokeLater(::createAndShowGui)
 }

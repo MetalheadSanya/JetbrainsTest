@@ -36,23 +36,27 @@ class TestLogLexerSpec : StringSpec() {
             lexer.parseToken(reader).shouldBe(UnknownToken("[==========] Running 6 tests from 2 test suites."))
             lexer.parseToken(reader).shouldBe(UnknownToken("[----------] Global test environment set-up."))
 
-            lexer.parseToken(reader).shouldBe(SuiteStartToken("FactorialTest", 3))
-            lexer.parseToken(reader).shouldBe(RunTestToken("FactorialTest", "Negative"))
-            lexer.parseToken(reader).shouldBe(OkTestToken("FactorialTest" , "Negative", 0))
-            lexer.parseToken(reader).shouldBe(RunTestToken("FactorialTest", "Zero"))
-            lexer.parseToken(reader).shouldBe(OkTestToken("FactorialTest" , "Zero", 0))
-            lexer.parseToken(reader).shouldBe(RunTestToken("FactorialTest", "Positive"))
-            lexer.parseToken(reader).shouldBe(OkTestToken("FactorialTest" , "Positive", 0))
-            lexer.parseToken(reader).shouldBe(SuiteEndToken("FactorialTest", 3, 0))
+            lexer.parseToken(reader).shouldBe(SuiteStartToken("FactorialTest", 3, "[----------] 3 tests from FactorialTest"))
+            lexer.parseToken(reader).shouldBe(RunTestToken("FactorialTest", "Negative", "[ RUN      ] FactorialTest.Negative"))
+            lexer.parseToken(reader).shouldBe(OkTestToken("FactorialTest" , "Negative", 0, "[       OK ] FactorialTest.Negative (0 ms)"))
+            lexer.parseToken(reader).shouldBe(RunTestToken("FactorialTest", "Zero", "[ RUN      ] FactorialTest.Zero"))
+            lexer.parseToken(reader).shouldBe(OkTestToken("FactorialTest" , "Zero", 0, "[       OK ] FactorialTest.Zero (0 ms)"))
+            lexer.parseToken(reader).shouldBe(RunTestToken("FactorialTest", "Positive", "[ RUN      ] FactorialTest.Positive"))
+            lexer.parseToken(reader).shouldBe(OkTestToken("FactorialTest" , "Positive", 0, "[       OK ] FactorialTest.Positive (0 ms)"))
+            lexer.parseToken(reader).shouldBe(SuiteEndToken("FactorialTest", 3, 0, "[----------] 3 tests from FactorialTest (0 ms total)"))
 
-            lexer.parseToken(reader).shouldBe(SuiteStartToken("IsPrimeTest", 1))
-            lexer.parseToken(reader).shouldBe(RunTestToken("IsPrimeTest", "Negative"))
-            lexer.parseToken(reader).shouldBe(OkTestToken("IsPrimeTest" , "Negative", 0))
-            lexer.parseToken(reader).shouldBe(SuiteEndToken("IsPrimeTest", 1, 0))
+            lexer.parseToken(reader).shouldBe(UnknownToken(""))
+
+            lexer.parseToken(reader).shouldBe(SuiteStartToken("IsPrimeTest", 1, "[----------] 1 test from IsPrimeTest"))
+            lexer.parseToken(reader).shouldBe(RunTestToken("IsPrimeTest", "Negative", "[ RUN      ] IsPrimeTest.Negative"))
+            lexer.parseToken(reader).shouldBe(OkTestToken("IsPrimeTest" , "Negative", 0, "[       OK ] IsPrimeTest.Negative (0 ms)"))
+            lexer.parseToken(reader).shouldBe(SuiteEndToken("IsPrimeTest", 1, 0, "[----------] 1 test from IsPrimeTest (0 ms total)"))
+
+            lexer.parseToken(reader).shouldBe(UnknownToken(""))
 
             lexer.parseToken(reader).shouldBe(UnknownToken("[----------] Global test environment tear-down"))
             lexer.parseToken(reader).shouldBe(UnknownToken("[==========] 6 tests from 2 test suites ran. (0 ms total)"))
-            lexer.parseToken(reader).shouldBe(PassedToken(6))
+            lexer.parseToken(reader).shouldBe(PassedToken(6, "[  PASSED  ] 6 tests."))
             lexer.parseToken(reader).shouldBe(null)
         }
 
@@ -77,15 +81,17 @@ class TestLogLexerSpec : StringSpec() {
             lexer.parseToken(reader).shouldBe(UnknownToken("[==========] Running 1 test from 1 test suite."))
             lexer.parseToken(reader).shouldBe(UnknownToken("[----------] Global test environment set-up."))
 
-            lexer.parseToken(reader).shouldBe(SuiteStartToken("CustomOutputTest", 1))
-            lexer.parseToken(reader).shouldBe(RunTestToken("CustomOutputTest", "PrintsMessage"))
+            lexer.parseToken(reader).shouldBe(SuiteStartToken("CustomOutputTest", 1, "[----------] 1 test from CustomOutputTest"))
+            lexer.parseToken(reader).shouldBe(RunTestToken("CustomOutputTest", "PrintsMessage", "[ RUN      ] CustomOutputTest.PrintsMessage"))
             lexer.parseToken(reader).shouldBe(UnknownToken("Printing something from the test body..."))
-            lexer.parseToken(reader).shouldBe(OkTestToken("CustomOutputTest" , "PrintsMessage", 0))
-            lexer.parseToken(reader).shouldBe(SuiteEndToken("CustomOutputTest", 1, 0))
+            lexer.parseToken(reader).shouldBe(OkTestToken("CustomOutputTest" , "PrintsMessage", 0, "[       OK ] CustomOutputTest.PrintsMessage (0 ms)"))
+            lexer.parseToken(reader).shouldBe(SuiteEndToken("CustomOutputTest", 1, 0, "[----------] 1 test from CustomOutputTest (0 ms total)"))
+
+            lexer.parseToken(reader).shouldBe(UnknownToken(""))
 
             lexer.parseToken(reader).shouldBe(UnknownToken("[----------] Global test environment tear-down"))
             lexer.parseToken(reader).shouldBe(UnknownToken("[==========] 1 test from 1 test suite ran. (0 ms total)"))
-            lexer.parseToken(reader).shouldBe(PassedToken(1))
+            lexer.parseToken(reader).shouldBe(PassedToken(1, "[  PASSED  ] 1 test."))
             lexer.parseToken(reader).shouldBe(null)
         }
 
@@ -120,23 +126,27 @@ class TestLogLexerSpec : StringSpec() {
             lexer.parseToken(reader).shouldBe(UnknownToken("[==========] Running 2 tests from 1 test suite."))
             lexer.parseToken(reader).shouldBe(UnknownToken("[----------] Global test environment set-up."))
 
-            lexer.parseToken(reader).shouldBe(SuiteStartToken("CustomOutputTest", 2))
-            lexer.parseToken(reader).shouldBe(RunTestToken("CustomOutputTest", "Succeeds"))
-            lexer.parseToken(reader).shouldBe(OkTestToken("CustomOutputTest" , "Succeeds", 0))
-            lexer.parseToken(reader).shouldBe(RunTestToken("CustomOutputTest", "Fails"))
+            lexer.parseToken(reader).shouldBe(SuiteStartToken("CustomOutputTest", 2, "[----------] 2 tests from CustomOutputTest"))
+            lexer.parseToken(reader).shouldBe(RunTestToken("CustomOutputTest", "Succeeds", "[ RUN      ] CustomOutputTest.Succeeds"))
+            lexer.parseToken(reader).shouldBe(OkTestToken("CustomOutputTest" , "Succeeds", 0, "[       OK ] CustomOutputTest.Succeeds (0 ms)"))
+            lexer.parseToken(reader).shouldBe(RunTestToken("CustomOutputTest", "Fails", "[ RUN      ] CustomOutputTest.Fails"))
             lexer.parseToken(reader).shouldBe(UnknownToken("/Users/zalutskii/Work/googleTest/googletest/samples/sample9_unittest.cc:99: Failure"))
             lexer.parseToken(reader).shouldBe(UnknownToken("Expected equality of these values:"))
             lexer.parseToken(reader).shouldBe(UnknownToken("  1"))
             lexer.parseToken(reader).shouldBe(UnknownToken("  2"))
             lexer.parseToken(reader).shouldBe(UnknownToken("This test fails in order to demonstrate alternative failure messages"))
-            lexer.parseToken(reader).shouldBe(FailedTestToken("CustomOutputTest", "Fails", 0))
-            lexer.parseToken(reader).shouldBe(SuiteEndToken("CustomOutputTest", 2, 0))
+            lexer.parseToken(reader).shouldBe(FailedTestToken("CustomOutputTest", "Fails", 0, "[  FAILED  ] CustomOutputTest.Fails (0 ms)"))
+            lexer.parseToken(reader).shouldBe(SuiteEndToken("CustomOutputTest", 2, 0, "[----------] 2 tests from CustomOutputTest (0 ms total)"))
+
+            lexer.parseToken(reader).shouldBe(UnknownToken(""))
 
             lexer.parseToken(reader).shouldBe(UnknownToken("[----------] Global test environment tear-down"))
             lexer.parseToken(reader).shouldBe(UnknownToken("[==========] 2 tests from 1 test suite ran. (0 ms total)"))
-            lexer.parseToken(reader).shouldBe(PassedToken(1))
+            lexer.parseToken(reader).shouldBe(PassedToken(1, "[  PASSED  ] 1 test."))
             lexer.parseToken(reader).shouldBe(UnknownToken("[  FAILED  ] 1 test, listed below:"))
             lexer.parseToken(reader).shouldBe(UnknownToken("[  FAILED  ] CustomOutputTest.Fails"))
+
+            lexer.parseToken(reader).shouldBe(UnknownToken(""))
 
             lexer.parseToken(reader).shouldBe(UnknownToken(" 1 FAILED TEST"))
             lexer.parseToken(reader).shouldBe(null)
@@ -162,14 +172,16 @@ class TestLogLexerSpec : StringSpec() {
             lexer.parseToken(reader).shouldBe(UnknownToken("[==========] Running 1 test from 1 test suite."))
             lexer.parseToken(reader).shouldBe(UnknownToken("[----------] Global test environment set-up."))
 
-            lexer.parseToken(reader).shouldBe(SuiteStartToken("MeaningfulTestParameters/PrimeTableTest", 1))
-            lexer.parseToken(reader).shouldBe(RunTestToken("MeaningfulTestParameters/PrimeTableTest", "ReturnsFalseForNonPrimes/0"))
-            lexer.parseToken(reader).shouldBe(OkTestToken("MeaningfulTestParameters/PrimeTableTest" , "ReturnsFalseForNonPrimes/0", 0))
-            lexer.parseToken(reader).shouldBe(SuiteEndToken("MeaningfulTestParameters/PrimeTableTest", 1, 0))
+            lexer.parseToken(reader).shouldBe(SuiteStartToken("MeaningfulTestParameters/PrimeTableTest", 1, "[----------] 1 test from MeaningfulTestParameters/PrimeTableTest"))
+            lexer.parseToken(reader).shouldBe(RunTestToken("MeaningfulTestParameters/PrimeTableTest", "ReturnsFalseForNonPrimes/0", "[ RUN      ] MeaningfulTestParameters/PrimeTableTest.ReturnsFalseForNonPrimes/0"))
+            lexer.parseToken(reader).shouldBe(OkTestToken("MeaningfulTestParameters/PrimeTableTest" , "ReturnsFalseForNonPrimes/0", 0, "[       OK ] MeaningfulTestParameters/PrimeTableTest.ReturnsFalseForNonPrimes/0 (0 ms)"))
+            lexer.parseToken(reader).shouldBe(SuiteEndToken("MeaningfulTestParameters/PrimeTableTest", 1, 0, "[----------] 1 test from MeaningfulTestParameters/PrimeTableTest (0 ms total)"))
+
+            lexer.parseToken(reader).shouldBe(UnknownToken(""))
 
             lexer.parseToken(reader).shouldBe(UnknownToken("[----------] Global test environment tear-down"))
             lexer.parseToken(reader).shouldBe(UnknownToken("[==========] 1 test from 1 test suite ran. (0 ms total)"))
-            lexer.parseToken(reader).shouldBe(PassedToken(1))
+            lexer.parseToken(reader).shouldBe(PassedToken(1, "[  PASSED  ] 1 test."))
             lexer.parseToken(reader).shouldBe(null)
         }
 
@@ -192,14 +204,14 @@ class TestLogLexerSpec : StringSpec() {
             lexer.parseToken(reader).shouldBe(UnknownToken("[==========] Running 1 test from 1 test suite."))
             lexer.parseToken(reader).shouldBe(UnknownToken("[----------] Global test environment set-up."))
 
-            lexer.parseToken(reader).shouldBe(SuiteStartToken("PrimeTableTest/0", 1))
-            lexer.parseToken(reader).shouldBe(RunTestToken("PrimeTableTest/0", "ReturnsFalseForNonPrimes"))
-            lexer.parseToken(reader).shouldBe(OkTestToken("PrimeTableTest/0" , "ReturnsFalseForNonPrimes", 0))
-            lexer.parseToken(reader).shouldBe(SuiteEndToken("PrimeTableTest/0", 1, 0))
+            lexer.parseToken(reader).shouldBe(SuiteStartToken("PrimeTableTest/0", 1, "[----------] 1 tests from PrimeTableTest/0, where TypeParam = OnTheFlyPrimeTable"))
+            lexer.parseToken(reader).shouldBe(RunTestToken("PrimeTableTest/0", "ReturnsFalseForNonPrimes", "[ RUN      ] PrimeTableTest/0.ReturnsFalseForNonPrimes"))
+            lexer.parseToken(reader).shouldBe(OkTestToken("PrimeTableTest/0" , "ReturnsFalseForNonPrimes", 0, "[       OK ] PrimeTableTest/0.ReturnsFalseForNonPrimes (0 ms)"))
+            lexer.parseToken(reader).shouldBe(SuiteEndToken("PrimeTableTest/0", 1, 0, "[----------] 1 test from PrimeTableTest/0 (0 ms total)"))
 
             lexer.parseToken(reader).shouldBe(UnknownToken("[----------] Global test environment tear-down"))
             lexer.parseToken(reader).shouldBe(UnknownToken("[==========] 1 test from 1 test suite ran. (0 ms total)"))
-            lexer.parseToken(reader).shouldBe(PassedToken(1))
+            lexer.parseToken(reader).shouldBe(PassedToken(1, "[  PASSED  ] 1 test."))
             lexer.parseToken(reader).shouldBe(null)
         }
     }

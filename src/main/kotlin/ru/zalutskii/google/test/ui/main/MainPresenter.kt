@@ -8,6 +8,7 @@ import kotlinx.coroutines.swing.Swing
 import ru.zalutskii.google.test.parser.testList.TestTree
 import ru.zalutskii.google.test.service.TestServiceOutput
 import javax.swing.tree.DefaultMutableTreeNode
+import javax.swing.tree.TreePath
 
 class MainPresenter: MainViewOutput, OpenFileModuleOutput, TestServiceOutput, CoroutineScope by CoroutineScope(Dispatchers.IO) {
 
@@ -24,6 +25,7 @@ class MainPresenter: MainViewOutput, OpenFileModuleOutput, TestServiceOutput, Co
         view?.setRunActionEnabled(false)
         view?.setRunFailedActionEnabled(false)
         view?.setStopActionEnabled(true)
+        view?.setTestSelectionEnabled(false)
 
         launch {
             service?.run()
@@ -40,11 +42,29 @@ class MainPresenter: MainViewOutput, OpenFileModuleOutput, TestServiceOutput, Co
         }
     }
 
+    override fun didSelectTest(path: TreePath) {
+        if (path.pathCount == 3) {
+            launch {
+                service?.showLog(path.path[1].toString(), path.path[2].toString())
+            }
+        } else if (path.pathCount == 2) {
+            launch {
+                service?.showLog(path.path[1].toString())
+            }
+        } else {
+            launch {
+                service?.showLog()
+            }
+        }
+    }
+
     override fun didOpenFile(file: File) {
         view?.setOpenActionEnabled(false)
         view?.setRunActionEnabled(false)
         view?.setRunFailedActionEnabled(false)
         view?.setStopActionEnabled(false)
+
+        view?.setLog("")
 
         launch {
             service?.open(file)
@@ -52,7 +72,7 @@ class MainPresenter: MainViewOutput, OpenFileModuleOutput, TestServiceOutput, Co
     }
 
     override suspend fun didLoadTestTree(tree: TestTree) {
-        val rootNode = DefaultMutableTreeNode("Root")
+        val rootNode = DefaultMutableTreeNode("All suites")
 
         for (case in tree.cases) {
             val caseNode = DefaultMutableTreeNode(case.name)
@@ -79,21 +99,20 @@ class MainPresenter: MainViewOutput, OpenFileModuleOutput, TestServiceOutput, Co
     override suspend fun didProcessOutput(log: String) {
         coroutineScope {
             launch(Dispatchers.Swing) {
-                view?.setOpenActionEnabled(false)
-                view?.setRunActionEnabled(false)
-                view?.setRunFailedActionEnabled(false)
-                view?.setStopActionEnabled(true)
                 view?.setLog(log)
             }
         }
     }
 
     override suspend fun didFinishRun() {
-        launch(Dispatchers.Swing) {
-            view?.setOpenActionEnabled(true)
-            view?.setRunActionEnabled(true)
-            view?.setRunFailedActionEnabled(false)
-            view?.setStopActionEnabled(false)
+        coroutineScope {
+            launch(Dispatchers.Swing) {
+                view?.setOpenActionEnabled(true)
+                view?.setRunActionEnabled(true)
+                view?.setRunFailedActionEnabled(false)
+                view?.setStopActionEnabled(false)
+                view?.setTestSelectionEnabled(true)
+            }
         }
     }
 }

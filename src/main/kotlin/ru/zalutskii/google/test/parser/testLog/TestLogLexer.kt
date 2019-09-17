@@ -12,7 +12,7 @@ class TestLogLexer : ITestLogLexer {
         }
 
         if (line.isEmpty()) {
-            return parseToken(stream)
+            return UnknownToken(line)
         }
 
         return if (!line.startsWith("[")) {
@@ -35,12 +35,14 @@ class TestLogLexer : ITestLogLexer {
                             val count = text.substringBefore(" ").toIntOrNull() ?: 0
                             val suite = text.substringAfter("from ").substringBefore(" ")
                             val time = text.substringAfter("(").substringBefore(" ").toIntOrNull() ?: 0
-                            return SuiteEndToken(suite, count, time)
+
+                            text.substring(1, 2)
+                            return SuiteEndToken(suite, count, time, line)
                         }
                         suiteStartRegex.containsMatchIn(text) -> {
                             val count = text.substringBefore(" ").toIntOrNull() ?: 0
                             val suite = text.substringAfter("from ").substringBefore(",")
-                            SuiteStartToken(suite, count)
+                            SuiteStartToken(suite, count, line)
                         }
                         else -> UnknownToken(line)
                     }
@@ -49,13 +51,13 @@ class TestLogLexer : ITestLogLexer {
                 "RUN" -> {
                     val suite = text.substringBefore(".")
                     val test = text.substringAfter(".")
-                    RunTestToken(suite, test)
+                    RunTestToken(suite, test, line)
                 }
                 "OK" -> {
                     val suite = text.substringBefore(".")
                     val test = text.substringAfter(".").substringBefore(" ")
                     val time = text.substringAfter("(").substringBefore(" ").toIntOrNull() ?: 0
-                    OkTestToken(suite, test, time)
+                    OkTestToken(suite, test, time, line)
                 }
                 "FAILED" -> {
                     val failedTestTokenRegex = "\\(\\d+ ms\\)$".toRegex()
@@ -64,14 +66,14 @@ class TestLogLexer : ITestLogLexer {
                             val suite = text.substringBefore(".")
                             val test = text.substringAfter(".").substringBefore(" ")
                             val time = text.substringAfter("(").substringBefore(" ").toIntOrNull() ?: 0
-                            FailedTestToken(suite, test, time)
+                            FailedTestToken(suite, test, time, line)
                         }
                         else -> UnknownToken(line)
                     }
                 }
                 "PASSED" -> {
                     val count = text.substringBefore(" ").toIntOrNull() ?: 0
-                    PassedToken(count)
+                    PassedToken(count, line)
                 }
                 else -> UnknownToken(line)
             }
