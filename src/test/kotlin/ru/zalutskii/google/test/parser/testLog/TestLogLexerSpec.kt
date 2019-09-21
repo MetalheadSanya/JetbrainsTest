@@ -33,7 +33,7 @@ class TestLogLexerSpec : StringSpec() {
             val lexer = TestLogLexer()
 
             lexer.parseToken(reader).shouldBe(UnknownToken("Running main() from /Users/zalutskii/Work/googleTest/googletest/src/gtest_main.cc"))
-            lexer.parseToken(reader).shouldBe(UnknownToken("[==========] Running 6 tests from 2 test suites."))
+            lexer.parseToken(reader).shouldBe(RunToken("[==========] Running 6 tests from 2 test suites."))
             lexer.parseToken(reader).shouldBe(UnknownToken("[----------] Global test environment set-up."))
 
             lexer.parseToken(reader).shouldBe(SuiteStartToken("FactorialTest", 3, "[----------] 3 tests from FactorialTest"))
@@ -55,7 +55,7 @@ class TestLogLexerSpec : StringSpec() {
             lexer.parseToken(reader).shouldBe(UnknownToken(""))
 
             lexer.parseToken(reader).shouldBe(UnknownToken("[----------] Global test environment tear-down"))
-            lexer.parseToken(reader).shouldBe(UnknownToken("[==========] 6 tests from 2 test suites ran. (0 ms total)"))
+            lexer.parseToken(reader).shouldBe(StopToken("[==========] 6 tests from 2 test suites ran. (0 ms total)"))
             lexer.parseToken(reader).shouldBe(PassedToken(6, "[  PASSED  ] 6 tests."))
             lexer.parseToken(reader).shouldBe(null)
         }
@@ -78,7 +78,7 @@ class TestLogLexerSpec : StringSpec() {
             val lexer = TestLogLexer()
 
             lexer.parseToken(reader).shouldBe(UnknownToken("Run this program with --terse_output to change the way it prints its output."))
-            lexer.parseToken(reader).shouldBe(UnknownToken("[==========] Running 1 test from 1 test suite."))
+            lexer.parseToken(reader).shouldBe(RunToken("[==========] Running 1 test from 1 test suite."))
             lexer.parseToken(reader).shouldBe(UnknownToken("[----------] Global test environment set-up."))
 
             lexer.parseToken(reader).shouldBe(SuiteStartToken("CustomOutputTest", 1, "[----------] 1 test from CustomOutputTest"))
@@ -90,7 +90,7 @@ class TestLogLexerSpec : StringSpec() {
             lexer.parseToken(reader).shouldBe(UnknownToken(""))
 
             lexer.parseToken(reader).shouldBe(UnknownToken("[----------] Global test environment tear-down"))
-            lexer.parseToken(reader).shouldBe(UnknownToken("[==========] 1 test from 1 test suite ran. (0 ms total)"))
+            lexer.parseToken(reader).shouldBe(StopToken("[==========] 1 test from 1 test suite ran. (0 ms total)"))
             lexer.parseToken(reader).shouldBe(PassedToken(1, "[  PASSED  ] 1 test."))
             lexer.parseToken(reader).shouldBe(null)
         }
@@ -123,7 +123,7 @@ class TestLogLexerSpec : StringSpec() {
             val lexer = TestLogLexer()
 
             lexer.parseToken(reader).shouldBe(UnknownToken("Run this program with --terse_output to change the way it prints its output."))
-            lexer.parseToken(reader).shouldBe(UnknownToken("[==========] Running 2 tests from 1 test suite."))
+            lexer.parseToken(reader).shouldBe(RunToken("[==========] Running 2 tests from 1 test suite."))
             lexer.parseToken(reader).shouldBe(UnknownToken("[----------] Global test environment set-up."))
 
             lexer.parseToken(reader).shouldBe(SuiteStartToken("CustomOutputTest", 2, "[----------] 2 tests from CustomOutputTest"))
@@ -141,7 +141,7 @@ class TestLogLexerSpec : StringSpec() {
             lexer.parseToken(reader).shouldBe(UnknownToken(""))
 
             lexer.parseToken(reader).shouldBe(UnknownToken("[----------] Global test environment tear-down"))
-            lexer.parseToken(reader).shouldBe(UnknownToken("[==========] 2 tests from 1 test suite ran. (0 ms total)"))
+            lexer.parseToken(reader).shouldBe(StopToken("[==========] 2 tests from 1 test suite ran. (0 ms total)"))
             lexer.parseToken(reader).shouldBe(PassedToken(1, "[  PASSED  ] 1 test."))
             lexer.parseToken(reader).shouldBe(UnknownToken("[  FAILED  ] 1 test, listed below:"))
             lexer.parseToken(reader).shouldBe(UnknownToken("[  FAILED  ] CustomOutputTest.Fails"))
@@ -169,7 +169,7 @@ class TestLogLexerSpec : StringSpec() {
             val lexer = TestLogLexer()
 
             lexer.parseToken(reader).shouldBe(UnknownToken("Running main() from /Users/zalutskii/Work/googleTest/googletest/src/gtest_main.cc"))
-            lexer.parseToken(reader).shouldBe(UnknownToken("[==========] Running 1 test from 1 test suite."))
+            lexer.parseToken(reader).shouldBe(RunToken("[==========] Running 1 test from 1 test suite."))
             lexer.parseToken(reader).shouldBe(UnknownToken("[----------] Global test environment set-up."))
 
             lexer.parseToken(reader).shouldBe(SuiteStartToken("MeaningfulTestParameters/PrimeTableTest", 1, "[----------] 1 test from MeaningfulTestParameters/PrimeTableTest"))
@@ -180,7 +180,7 @@ class TestLogLexerSpec : StringSpec() {
             lexer.parseToken(reader).shouldBe(UnknownToken(""))
 
             lexer.parseToken(reader).shouldBe(UnknownToken("[----------] Global test environment tear-down"))
-            lexer.parseToken(reader).shouldBe(UnknownToken("[==========] 1 test from 1 test suite ran. (0 ms total)"))
+            lexer.parseToken(reader).shouldBe(StopToken("[==========] 1 test from 1 test suite ran. (0 ms total)"))
             lexer.parseToken(reader).shouldBe(PassedToken(1, "[  PASSED  ] 1 test."))
             lexer.parseToken(reader).shouldBe(null)
         }
@@ -201,7 +201,7 @@ class TestLogLexerSpec : StringSpec() {
             val lexer = TestLogLexer()
 
             lexer.parseToken(reader).shouldBe(UnknownToken("Running main() from /Users/zalutskii/Work/googleTest/googletest/src/gtest_main.cc"))
-            lexer.parseToken(reader).shouldBe(UnknownToken("[==========] Running 1 test from 1 test suite."))
+            lexer.parseToken(reader).shouldBe(RunToken("[==========] Running 1 test from 1 test suite."))
             lexer.parseToken(reader).shouldBe(UnknownToken("[----------] Global test environment set-up."))
 
             lexer.parseToken(reader).shouldBe(SuiteStartToken("PrimeTableTest/0", 1, "[----------] 1 tests from PrimeTableTest/0, where TypeParam = OnTheFlyPrimeTable"))
@@ -210,7 +210,7 @@ class TestLogLexerSpec : StringSpec() {
             lexer.parseToken(reader).shouldBe(SuiteEndToken("PrimeTableTest/0", 1, 0, "[----------] 1 test from PrimeTableTest/0 (0 ms total)"))
 
             lexer.parseToken(reader).shouldBe(UnknownToken("[----------] Global test environment tear-down"))
-            lexer.parseToken(reader).shouldBe(UnknownToken("[==========] 1 test from 1 test suite ran. (0 ms total)"))
+            lexer.parseToken(reader).shouldBe(StopToken("[==========] 1 test from 1 test suite ran. (0 ms total)"))
             lexer.parseToken(reader).shouldBe(PassedToken(1, "[  PASSED  ] 1 test."))
             lexer.parseToken(reader).shouldBe(null)
         }

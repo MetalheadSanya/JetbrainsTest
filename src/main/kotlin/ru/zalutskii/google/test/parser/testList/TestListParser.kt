@@ -14,7 +14,7 @@ class TestListParser(private val lexer: ITestListLexer) : ITestListParser {
 
             if (token.type == Token.Type.TEST_CASE) {
                 if (testCaseName != null && functions.isNotEmpty()) {
-                    cases.add(TestTree.Case(testCaseName, functions.toList()))
+                    cases.add(TestTree.Case(testCaseName, functions = functions.toList()))
                     functions = mutableListOf()
                 }
                 testCaseName = token.literal
@@ -24,9 +24,9 @@ class TestListParser(private val lexer: ITestListLexer) : ITestListParser {
         }
 
         if (testCaseName != null && functions.isNotEmpty()) {
-            cases.add(TestTree.Case(testCaseName, functions.toList()))
+            cases.add(TestTree.Case(testCaseName, functions = functions.toList()))
         }
 
-        return TestTree(cases)
+        return TestTree(cases, TestTree.Status.READY)
     }
 }

@@ -99,13 +99,16 @@ class MainView : MainViewInput {
                 output?.didSelectTest(testTree.getPathForRow(0))
             }
         }
+        testTree.cellRenderer = TestCellRenderer()
 
 
         val treeScrollPane = JScrollPane(testTree)
         treeScrollPane.setViewportView(testTree)
 
         val logScrollPane = JScrollPane(logArea)
+        logArea.disabledTextColor = Color.BLACK
         logArea.font = Font("monospaced", Font.PLAIN, 12)
+        logArea.isEnabled = false
 
         val splitPane = JSplitPane(JSplitPane.HORIZONTAL_SPLIT, treeScrollPane, logScrollPane)
         splitPane.dividerLocation = 200

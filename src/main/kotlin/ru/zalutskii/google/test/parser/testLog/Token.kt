@@ -2,6 +2,10 @@ package ru.zalutskii.google.test.parser.testLog
 
 sealed class Token
 
+data class RunToken(val literal: String) : Token()
+
+data class StopToken(val literal: String) : Token()
+
 data class SuiteStartToken(val suite: String, val testCount: Int, val literal: String) : Token()
 
 data class SuiteEndToken(val suite: String, val testCount: Int, val milliseconds: Int, val literal: String) : Token()

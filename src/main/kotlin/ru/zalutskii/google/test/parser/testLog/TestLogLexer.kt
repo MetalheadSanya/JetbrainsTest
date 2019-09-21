@@ -27,11 +27,20 @@ class TestLogLexer : ITestLogLexer {
             val text = line.replace(tokenSectionRegex, "")
 
             when (tokenType) {
+                "==========" -> {
+                    val startRegex = "^Running \\d+ tests? from \\d+ test suites?.".toRegex()
+                    val endRegex = "^\\d+ tests? from \\d+ test suites? ran.".toRegex()
+                    when {
+                        startRegex.containsMatchIn(text) -> RunToken(line)
+                        endRegex.containsMatchIn(text) -> StopToken(line)
+                        else -> UnknownToken(line)
+                    }
+                }
                 "----------" -> {
                     val suiteStartRegex = "^\\d+ tests? from ".toRegex()
-                    val suiteEndToken = "^\\d+ tests? from .*? \\(\\d+ ms total\\)$".toRegex()
+                    val suiteEndRegex = "^\\d+ tests? from .*? \\(\\d+ ms total\\)$".toRegex()
                     when {
-                        suiteEndToken.containsMatchIn(text) -> {
+                        suiteEndRegex.containsMatchIn(text) -> {
                             val count = text.substringBefore(" ").toIntOrNull() ?: 0
                             val suite = text.substringAfter("from ").substringBefore(" ")
                             val time = text.substringAfter("(").substringBefore(" ").toIntOrNull() ?: 0

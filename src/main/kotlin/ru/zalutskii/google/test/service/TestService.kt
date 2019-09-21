@@ -1,20 +1,21 @@
 package ru.zalutskii.google.test.service
 
 import ru.zalutskii.google.test.parser.testList.TestListParser
-import ru.zalutskii.google.test.service.logPerformer.ILogPerformerInput
-import ru.zalutskii.google.test.service.logPerformer.ILogPerformerOutput
+import ru.zalutskii.google.test.parser.testList.TestTree
+import ru.zalutskii.google.test.service.logPerformer.LogPerformerInput
+import ru.zalutskii.google.test.service.logPerformer.LogPerformerOutput
 import ru.zalutskii.google.test.service.process.ITestProcess
 import java.io.File
 
 class TestService(
     private val parser: TestListParser,
     private val process: ITestProcess
-) : TestServiceInput, ILogPerformerOutput {
+) : TestServiceInput, LogPerformerOutput {
 
     var output: TestServiceOutput? = null
-    var logPerformer: ILogPerformerInput? = null
+    var logPerformer: LogPerformerInput? = null
 
-    private var log: String = ""
+    private var tree: TestTree? = null
 
     override suspend fun open(file: File) {
         process.open(file)
@@ -22,24 +23,42 @@ class TestService(
         val reader = process.readTestCases()
         val tree = parser.parseTree(reader)
 
+        this.tree = tree
+
         output?.didLoadTestTree(tree)
         output?.didProcessOutput("")
     }
 
     override suspend fun run() {
         try {
-            if (logPerformer == null) {
-                return
-            }
+            val logPerformer = this.logPerformer ?: return
 
-            logPerformer?.reset()
+            logPerformer.reset()
+
             output?.didProcessOutput("")
 
+            setLogStatus(TestTree.Status.QUEUE)
+            tree?.let { output?.didLoadTestTree(it) }
+
             val reader = process.runTestCases()
-            logPerformer?.perform(reader)
+            logPerformer.perform(reader)
         } finally {
             output?.didFinishRun()
         }
+    }
+
+    private fun setLogStatus(status: TestTree.Status) {
+        var tree = this.tree ?: return
+        val suites = tree.suites.toMutableList()
+        suites.replaceAll { suite ->
+            val functions = suite.functions.toMutableList()
+            functions.replaceAll { function ->
+                function.copy(status = status)
+            }
+            suite.copy(status = status, functions = functions)
+        }
+        tree = tree.copy(suites = suites, status = status)
+        this.tree = tree
     }
 
     override suspend fun stop() {
@@ -65,18 +84,103 @@ class TestService(
         output?.didProcessOutput(log)
     }
 
-    override suspend fun didStartTestSuite(suite: String) {
+    override suspend fun didStartTestSuite(suiteName: String) {
+        updateSuiteStatus(suiteName, TestTree.Status.RUN)
     }
 
-    override suspend fun didEndTestSuite(suite: String, milliseconds: Int) {
+    private suspend fun updateSuiteStatus(
+        suiteName: String,
+        status: TestTree.Status,
+        time: String? = null
+    ) {
+        var tree = this.tree ?: return
+        val suites = tree.suites.toMutableList()
+        suites.replaceAll {
+            when (it.name) {
+                suiteName -> it.copy(status = status, time = time)
+                else -> it
+            }
+        }
+        tree = tree.copy(suites = suites)
+        this.tree = tree
+
+        output?.didLoadTestTree(tree)
     }
 
-    override suspend fun didStartTest(suite: String, test: String) {
+    override suspend fun didEndTestSuite(suiteName: String, milliseconds: Int) {
+        val tree = this.tree ?: return
+        val suite = tree.suites.firstOrNull { it.name == suiteName } ?: return
+        val failed = suite.functions.map { it.status == TestTree.Status.FAIL }
+            .firstOrNull { it } ?: false
+        val status = when (failed) {
+            true -> TestTree.Status.FAIL
+            false -> TestTree.Status.SUCCESS
+        }
+        updateSuiteStatus(suiteName, status, "$milliseconds")
     }
 
-    override suspend fun didPassTest(suite: String, test: String, milliseconds: Int) {
+    override suspend fun didStartTest(suiteName: String, testName: String) {
+        updateTestStatus(suiteName, testName, TestTree.Status.RUN)
     }
 
-    override suspend fun didFailTest(suite: String, test: String, milliseconds: Int) {
+    private suspend fun updateTestStatus(
+        suiteName: String,
+        testName: String,
+        status: TestTree.Status,
+        time: String? = null
+    ) {
+        var tree = this.tree ?: return
+        val suites = tree.suites.toMutableList()
+        val suite = suites.firstOrNull { it.name == suiteName } ?: return
+        val tests = suite.functions.toMutableList()
+        tests.replaceAll {
+            when (it.name) {
+                testName -> it.copy(status = status, time = time)
+                else -> it
+            }
+        }
+        suites.replaceAll {
+            when (it.name) {
+                suiteName -> it.copy(functions = tests)
+                else -> it
+            }
+        }
+        tree = tree.copy(suites = suites)
+        this.tree = tree
+
+        output?.didLoadTestTree(tree)
+        return
     }
+
+    override suspend fun didPassTest(suiteName: String, testName: String, milliseconds: Int) {
+        updateTestStatus(suiteName, testName, TestTree.Status.SUCCESS, "$milliseconds")
+    }
+
+    override suspend fun didFailTest(suiteName: String, testName: String, milliseconds: Int) {
+        updateTestStatus(suiteName, testName, TestTree.Status.FAIL, "$milliseconds")
+    }
+
+    override suspend fun didStartTest() {
+        updateRootStatus(TestTree.Status.RUN)
+    }
+
+    override suspend fun didEndTest() {
+        val tree = this.tree ?: return
+        val failed = tree.suites.map { it.status == TestTree.Status.FAIL }
+            .firstOrNull { it } ?: false
+        val status = when (failed) {
+            true -> TestTree.Status.FAIL
+            false -> TestTree.Status.SUCCESS
+        }
+        updateRootStatus(status)
+    }
+
+    private suspend fun updateRootStatus(status: TestTree.Status) {
+        var tree = this.tree ?: return
+        tree = tree.copy(status = status)
+        this.tree = tree
+
+        output?.didLoadTestTree(tree)
+    }
+
 }

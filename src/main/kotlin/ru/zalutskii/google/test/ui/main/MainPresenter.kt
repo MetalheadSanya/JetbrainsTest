@@ -43,20 +43,32 @@ class MainPresenter: MainViewOutput, OpenFileModuleOutput, TestServiceOutput, Co
     }
 
     override fun didSelectTest(path: TreePath) {
-        if (path.pathCount == 3) {
-            launch {
-                service?.showLog(path.path[1].toString(), path.path[2].toString())
+        val viewModelPath = extractViewModels(path)
+        when (viewModelPath.size) {
+            3 -> launch {
+                service?.showLog(viewModelPath[1].name, viewModelPath[2].name)
             }
-        } else if (path.pathCount == 2) {
-            launch {
-                service?.showLog(path.path[1].toString())
+            2 -> launch {
+                service?.showLog(viewModelPath[1].name)
             }
-        } else {
-            launch {
+            else -> launch {
                 service?.showLog()
             }
         }
     }
+
+    private fun extractViewModels(path: TreePath): List<TestViewModel> {
+        if (path.pathCount < 1) return listOf()
+        val root = extractViewModel(path.path[0])
+        if (path.pathCount < 2) return listOf(root)
+        val suite = extractViewModel(path.path[1])
+        if (path.pathCount < 3) return listOf(root, suite)
+        val function = extractViewModel(path.path[2])
+        return listOf(root, suite, function)
+    }
+
+    private fun extractViewModel(data: Any): TestViewModel =
+        (data as DefaultMutableTreeNode).userObject as TestViewModel
 
     override fun didOpenFile(file: File) {
         view?.setOpenActionEnabled(false)
@@ -72,13 +84,30 @@ class MainPresenter: MainViewOutput, OpenFileModuleOutput, TestServiceOutput, Co
     }
 
     override suspend fun didLoadTestTree(tree: TestTree) {
-        val rootNode = DefaultMutableTreeNode("All suites")
 
-        for (case in tree.cases) {
-            val caseNode = DefaultMutableTreeNode(case.name)
+        val rootViewModel = TestViewModel(
+            "All suites",
+            makeViewModelStatus(tree.status),
+            null
+        )
+        val rootNode = DefaultMutableTreeNode(rootViewModel)
+
+        for (case in tree.suites) {
+
+            val caseViewModel = TestViewModel(
+                case.name,
+                makeViewModelStatus(case.status),
+                case.time?.let(::makeTimeText)
+            )
+            val caseNode = DefaultMutableTreeNode(caseViewModel)
 
             for (function in case.functions) {
-                val functionNode = DefaultMutableTreeNode(function.name)
+                val functionViewModel = TestViewModel(
+                    function.name,
+                    makeViewModelStatus(function.status),
+                    function.time?.let(::makeTimeText)
+                )
+                val functionNode = DefaultMutableTreeNode(functionViewModel)
                 caseNode.add(functionNode)
             }
 
@@ -95,6 +124,16 @@ class MainPresenter: MainViewOutput, OpenFileModuleOutput, TestServiceOutput, Co
             }
         }
     }
+
+    private fun makeViewModelStatus(status: TestTree.Status) = when (status) {
+        TestTree.Status.READY -> null
+        TestTree.Status.QUEUE -> TestViewModel.Status.QUEUED
+        TestTree.Status.RUN -> TestViewModel.Status.RUN
+        TestTree.Status.SUCCESS -> TestViewModel.Status.SUCCESS
+        TestTree.Status.FAIL -> TestViewModel.Status.FAIL
+    }
+
+    private fun makeTimeText(time: String) = "($time ms)"
 
     override suspend fun didProcessOutput(log: String) {
         coroutineScope {
