@@ -1,12 +1,15 @@
 package ru.zalutskii.google.test.ui.main
 
-import kotlinx.coroutines.*
-import ru.zalutskii.google.test.service.TestServiceInput
-import ru.zalutskii.google.test.ui.openFile.OpenFileModuleOutput
-import java.io.File
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.swing.Swing
 import ru.zalutskii.google.test.parser.testList.TestTree
+import ru.zalutskii.google.test.service.TestServiceInput
 import ru.zalutskii.google.test.service.TestServiceOutput
+import ru.zalutskii.google.test.ui.openFile.OpenFileModuleOutput
+import java.io.File
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.TreePath
 
@@ -85,6 +88,30 @@ class MainPresenter: MainViewOutput, OpenFileModuleOutput, TestServiceOutput, Co
 
     override suspend fun didLoadTestTree(tree: TestTree) {
 
+        val rootNode = defaultMutableTreeNode(tree)
+
+        coroutineScope {
+            launch(Dispatchers.Swing) {
+                view?.setTreeNode(rootNode)
+                view?.setOpenActionEnabled(true)
+                view?.setRunActionEnabled(true)
+                view?.setRunFailedActionEnabled(false)
+                view?.setStopActionEnabled(false)
+            }
+        }
+    }
+
+    override suspend fun didUpdateTestTree(tree: TestTree) {
+        val rootNode = defaultMutableTreeNode(tree)
+
+        coroutineScope {
+            launch(Dispatchers.Swing) {
+                view?.setTreeNode(rootNode)
+            }
+        }
+    }
+
+    private fun defaultMutableTreeNode(tree: TestTree): DefaultMutableTreeNode {
         val rootViewModel = TestViewModel(
             "All suites",
             makeViewModelStatus(tree.status),
@@ -113,16 +140,7 @@ class MainPresenter: MainViewOutput, OpenFileModuleOutput, TestServiceOutput, Co
 
             rootNode.add(caseNode)
         }
-
-        coroutineScope {
-            launch(Dispatchers.Swing) {
-                view?.setTreeNode(rootNode)
-                view?.setOpenActionEnabled(true)
-                view?.setRunActionEnabled(true)
-                view?.setRunFailedActionEnabled(false)
-                view?.setStopActionEnabled(false)
-            }
-        }
+        return rootNode
     }
 
     private fun makeViewModelStatus(status: TestTree.Status) = when (status) {
@@ -144,6 +162,8 @@ class MainPresenter: MainViewOutput, OpenFileModuleOutput, TestServiceOutput, Co
     }
 
     override suspend fun didFinishRun() {
+        val toastText = "Test run finished"
+
         coroutineScope {
             launch(Dispatchers.Swing) {
                 view?.setOpenActionEnabled(true)
@@ -151,6 +171,7 @@ class MainPresenter: MainViewOutput, OpenFileModuleOutput, TestServiceOutput, Co
                 view?.setRunFailedActionEnabled(false)
                 view?.setStopActionEnabled(false)
                 view?.setTestSelectionEnabled(true)
+                view?.showToast(toastText)
             }
         }
     }

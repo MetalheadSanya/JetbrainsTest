@@ -13,6 +13,7 @@ interface MainViewInput {
     fun setTestSelectionEnabled(enabled: Boolean)
 
     fun setLog(log: String)
+    fun showToast(text: String)
 }
 
 interface MainViewOutput {

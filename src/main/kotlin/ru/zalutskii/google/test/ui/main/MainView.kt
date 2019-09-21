@@ -1,6 +1,9 @@
 package ru.zalutskii.google.test.ui.main
 
-import java.awt.*
+import java.awt.Color
+import java.awt.Dimension
+import java.awt.Font
+import java.awt.Toolkit
 import java.awt.event.KeyEvent
 import javax.swing.*
 import javax.swing.tree.DefaultTreeModel
@@ -30,10 +33,23 @@ class MainView : MainViewInput {
     private val testTree = JTree()
     private val logArea = JTextArea("Test")
 
+    private val toast = JPanel()
+    private val toastLabel = JLabel()
+    private val toastTimer: Timer
+
     var output: MainViewOutput? = null
 
     init {
+        toastTimer = Timer(3000) {
+            hideToast()
+        }
+        toastTimer.isRepeats = false
+
         createUi()
+    }
+
+    private fun hideToast() {
+        frame.glassPane.isVisible = false
     }
 
     fun show() {
@@ -72,6 +88,13 @@ class MainView : MainViewInput {
         logArea.text = log
     }
 
+    override fun showToast(text: String) {
+        toastLabel.text = text
+        frame.glassPane.isVisible = true
+        toastTimer.stop()
+        toastTimer.start()
+    }
+
     override fun setTestSelectionEnabled(enabled: Boolean) {
         testTree.isEnabled = enabled
     }
@@ -81,6 +104,12 @@ class MainView : MainViewInput {
         frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
         frame.size = Dimension(600, 400)
         frame.setLocationRelativeTo(null)
+
+        val glassPane = JPanel()
+        frame.glassPane = glassPane
+        val glassLayout = SpringLayout()
+        glassPane.layout = glassLayout
+        glassPane.isOpaque = false
 
         frame.jMenuBar = createMenuBar()
 
@@ -122,6 +151,16 @@ class MainView : MainViewInput {
         layout.putConstraint(SpringLayout.WEST, splitPane, 0, SpringLayout.WEST, frame.contentPane)
         layout.putConstraint(SpringLayout.EAST, splitPane, 0, SpringLayout.EAST, frame.contentPane)
         layout.putConstraint(SpringLayout.SOUTH, splitPane, 0, SpringLayout.SOUTH, frame.contentPane)
+
+        toastLabel.foreground = Color.WHITE
+
+        toast.border = BorderFactory.createEmptyBorder(4, 4, 4, 4)
+        toast.background = Color.DARK_GRAY
+        toast.add(toastLabel)
+
+        glassPane.add(toast)
+        glassLayout.putConstraint(SpringLayout.EAST, toast, -8, SpringLayout.EAST, glassPane)
+        glassLayout.putConstraint(SpringLayout.SOUTH, toast, -8, SpringLayout.SOUTH, glassPane)
     }
 
     private fun createToolBar(): JToolBar {

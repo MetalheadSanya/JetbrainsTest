@@ -38,7 +38,7 @@ class TestService(
             output?.didProcessOutput("")
 
             setLogStatus(TestTree.Status.QUEUE)
-            tree?.let { output?.didLoadTestTree(it) }
+            tree?.let { output?.didUpdateTestTree(it) }
 
             val reader = process.runTestCases()
             logPerformer.perform(reader)
@@ -104,7 +104,7 @@ class TestService(
         tree = tree.copy(suites = suites)
         this.tree = tree
 
-        output?.didLoadTestTree(tree)
+        output?.didUpdateTestTree(tree)
     }
 
     override suspend fun didEndTestSuite(suiteName: String, milliseconds: Int) {
@@ -148,7 +148,7 @@ class TestService(
         tree = tree.copy(suites = suites)
         this.tree = tree
 
-        output?.didLoadTestTree(tree)
+        output?.didUpdateTestTree(tree)
         return
     }
 
@@ -180,7 +180,7 @@ class TestService(
         tree = tree.copy(status = status)
         this.tree = tree
 
-        output?.didLoadTestTree(tree)
+        output?.didUpdateTestTree(tree)
     }
 
 }

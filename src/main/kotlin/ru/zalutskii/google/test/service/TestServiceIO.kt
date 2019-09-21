@@ -15,6 +15,7 @@ interface TestServiceInput {
 
 interface TestServiceOutput {
     suspend fun didLoadTestTree(tree: TestTree)
+    suspend fun didUpdateTestTree(tree: TestTree)
     suspend fun didProcessOutput(log: String)
     suspend fun didFinishRun()
 }
