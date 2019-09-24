@@ -13,7 +13,8 @@ import java.io.File
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.TreePath
 
-class MainPresenter: MainViewOutput, OpenFileModuleOutput, TestServiceOutput, CoroutineScope by CoroutineScope(Dispatchers.IO) {
+class MainPresenter : MainViewOutput, OpenFileModuleOutput, TestServiceOutput,
+    CoroutineScope by CoroutineScope(Dispatchers.IO) {
 
     var view: MainViewInput? = null
     var router: MainRouterInput? = null
@@ -36,7 +37,15 @@ class MainPresenter: MainViewOutput, OpenFileModuleOutput, TestServiceOutput, Co
     }
 
     override fun didPressRunFailed() {
-        println("Run > Run Failed")
+        view?.setOpenActionEnabled(false)
+        view?.setRunActionEnabled(false)
+        view?.setRunFailedActionEnabled(false)
+        view?.setStopActionEnabled(true)
+        view?.setTestSelectionEnabled(false)
+
+        launch {
+            service?.rerunFailedTests()
+        }
     }
 
     override fun didPressStop() {
@@ -161,14 +170,14 @@ class MainPresenter: MainViewOutput, OpenFileModuleOutput, TestServiceOutput, Co
         }
     }
 
-    override suspend fun didFinishRun() {
+    override suspend fun didFinishRun(status: TestTree.Status) {
         val toastText = "Test run finished"
 
         coroutineScope {
             launch(Dispatchers.Swing) {
                 view?.setOpenActionEnabled(true)
                 view?.setRunActionEnabled(true)
-                view?.setRunFailedActionEnabled(false)
+                view?.setRunFailedActionEnabled(status == TestTree.Status.FAIL)
                 view?.setStopActionEnabled(false)
                 view?.setTestSelectionEnabled(true)
                 view?.showToast(toastText)

@@ -3,9 +3,9 @@ package ru.zalutskii.google.test
 import ru.zalutskii.google.test.parser.testList.TestListLexer
 import ru.zalutskii.google.test.parser.testList.TestListParser
 import ru.zalutskii.google.test.parser.testLog.TestLogLexer
-import ru.zalutskii.google.test.service.process.TestProcess
 import ru.zalutskii.google.test.service.TestService
 import ru.zalutskii.google.test.service.logPerformer.LogPerformer
+import ru.zalutskii.google.test.service.process.TestProcessImpl
 import ru.zalutskii.google.test.ui.main.MainPresenter
 import ru.zalutskii.google.test.ui.main.MainRouter
 import ru.zalutskii.google.test.ui.main.MainView
@@ -18,7 +18,7 @@ fun createAndShowGui() {
     val presenter = MainPresenter()
     val router = MainRouter()
 
-    val process = TestProcess()
+    val process = TestProcessImpl()
 
     val listLexer = TestListLexer()
     val parser = TestListParser(listLexer)

@@ -6,6 +6,7 @@ import java.io.File
 interface TestServiceInput {
     suspend fun open(file: File)
     suspend fun run()
+    suspend fun rerunFailedTests()
     suspend fun stop()
 
     suspend fun showLog(suite: String, test: String)
@@ -17,5 +18,5 @@ interface TestServiceOutput {
     suspend fun didLoadTestTree(tree: TestTree)
     suspend fun didUpdateTestTree(tree: TestTree)
     suspend fun didProcessOutput(log: String)
-    suspend fun didFinishRun()
+    suspend fun didFinishRun(status: TestTree.Status)
 }

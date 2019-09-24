@@ -4,17 +4,18 @@ import ru.zalutskii.google.test.parser.testList.TestListParser
 import ru.zalutskii.google.test.parser.testList.TestTree
 import ru.zalutskii.google.test.service.logPerformer.LogPerformerInput
 import ru.zalutskii.google.test.service.logPerformer.LogPerformerOutput
-import ru.zalutskii.google.test.service.process.ITestProcess
+import ru.zalutskii.google.test.service.process.TestProcess
 import java.io.File
 
 class TestService(
     private val parser: TestListParser,
-    private val process: ITestProcess
+    private val process: TestProcess
 ) : TestServiceInput, LogPerformerOutput {
 
     var output: TestServiceOutput? = null
     var logPerformer: LogPerformerInput? = null
 
+    @Volatile
     private var tree: TestTree? = null
 
     override suspend fun open(file: File) {
@@ -43,7 +44,7 @@ class TestService(
             val reader = process.runTestCases()
             logPerformer.perform(reader)
         } finally {
-            output?.didFinishRun()
+            output?.didFinishRun(getTreeStatus())
         }
     }
 
@@ -56,6 +57,67 @@ class TestService(
                 function.copy(status = status)
             }
             suite.copy(status = status, functions = functions)
+        }
+        tree = tree.copy(suites = suites, status = status)
+        this.tree = tree
+    }
+
+    override suspend fun rerunFailedTests() {
+        try {
+            val logPerformer = this.logPerformer ?: return
+
+            logPerformer.reset()
+
+            output?.didProcessOutput("")
+
+            val failedTests = getFailedTests()
+            if (failedTests.none()) {
+                output?.didFinishRun(getTreeStatus())
+                return
+            }
+
+            setFailedTestStatus(TestTree.Status.QUEUE)
+            tree?.let { output?.didUpdateTestTree(it) }
+
+            val reader = process.runTests(failedTests)
+            logPerformer.perform(reader)
+        } finally {
+            output?.didFinishRun(getTreeStatus())
+        }
+    }
+
+    private fun getTreeStatus(): TestTree.Status =
+        tree?.status ?: TestTree.Status.SUCCESS
+
+    private fun getFailedTests(): Iterable<String> {
+        val tree = this.tree ?: return emptyList()
+        return tree.suites
+            .filter { it.status == TestTree.Status.FAIL }
+            .flatMap {
+                it.functions
+                    .filter { func -> func.status == TestTree.Status.FAIL }
+                    .map { func -> "${it.name}.${func.name}" }
+
+            }
+    }
+
+    private fun setFailedTestStatus(status: TestTree.Status) {
+        var tree = this.tree ?: return
+        val suites = tree.suites.toMutableList()
+        suites.map { suite ->
+            if (suite.status != TestTree.Status.FAIL) {
+                suite
+            } else {
+                val functions = suite.functions.toMutableList()
+                functions.replaceAll { function ->
+                    if (function.status != TestTree.Status.FAIL) {
+                        function
+                    } else {
+                        function.copy(status = status)
+                    }
+                }
+                suite.copy(status = status, functions = functions)
+            }
         }
         tree = tree.copy(suites = suites, status = status)
         this.tree = tree
