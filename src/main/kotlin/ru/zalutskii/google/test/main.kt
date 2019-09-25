@@ -23,7 +23,7 @@ fun createAndShowGui() {
     val listLexer = TestListLexer()
     val parser = TestListParser(listLexer)
 
-    val service = TestService(parser,process)
+    val service = TestService(parser, process)
 
     val logLexer = TestLogLexer()
     val logPerformer = LogPerformer(logLexer)
@@ -46,7 +46,8 @@ fun createAndShowGui() {
 
 fun main(args: Array<String>) {
     System.setProperty("apple.laf.useScreenMenuBar", "true")
-    System.setProperty("apple.awt.fileDialogForDirectories", "true")
+    System.setProperty("apple.awt.textantialiasing", "true")
+
     JFrame.setDefaultLookAndFeelDecorated(true)
     JDialog.setDefaultLookAndFeelDecorated(true)
 
