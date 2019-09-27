@@ -1,9 +1,10 @@
-package ru.zalutskii.google.test.service.logPerformer
+package ru.zalutskii.google.test.service.log.performer
 
 import ru.zalutskii.google.test.parser.log.*
 import java.io.BufferedReader
 
-class LogPerformer(private val parser: TestLogParser) : LogPerformerInput {
+class LogPerformer(private val parser: TestLogParser) :
+    LogPerformerInput {
 
     var output: LogPerformerOutput? = null
 
@@ -49,24 +50,24 @@ class LogPerformer(private val parser: TestLogParser) : LogPerformerInput {
                 is SuiteStartToken -> {
                     currentSuite = token.suite
                     logBySuite[token.suite] = token.literal
-                    output?.didStartTestSuite(token.suite)
                     log += token.literal
                     output?.didProcessLog(log)
+                    output?.didStartTestSuite(token.suite)
                 }
                 is SuiteEndToken -> {
                     currentSuite = null
                     logBySuite[token.suite] += token.literal
-                    output?.didEndTestSuite(token.suite, token.milliseconds)
                     log += token.literal
                     output?.didProcessLog(log)
+                    output?.didEndTestSuite(token.suite, token.milliseconds)
                 }
                 is RunTestToken -> {
                     currentTest = "${token.suite}.${token.test}"
                     logBySuite[token.suite] += token.literal
                     logByTest[currentTest] = token.literal
                     log += token.literal
-                    output?.didStartTest(token.suite, token.test)
                     output?.didProcessLog(log)
+                    output?.didStartTest(token.suite, token.test)
                 }
                 is OkTestToken -> {
                     currentTest = "${token.suite}.${token.test}"
@@ -74,8 +75,8 @@ class LogPerformer(private val parser: TestLogParser) : LogPerformerInput {
                     logByTest[currentTest] += token.literal
                     log += token.literal
                     currentTest = null
-                    output?.didPassTest(token.suite, token.test, token.milliseconds)
                     output?.didProcessLog(log)
+                    output?.didPassTest(token.suite, token.test, token.milliseconds)
                 }
                 is FailedTestToken -> {
                     currentTest = "${token.suite}.${token.test}"
@@ -83,7 +84,11 @@ class LogPerformer(private val parser: TestLogParser) : LogPerformerInput {
                     logByTest[currentTest] += token.literal
                     log += token.literal
                     currentTest = null
+                    output?.didProcessLog(log)
                     output?.didFailTest(token.suite, token.test, token.milliseconds)
+                }
+                is PassedToken -> {
+                    log += token.literal
                     output?.didProcessLog(log)
                 }
                 is UnknownToken -> {

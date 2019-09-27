@@ -1,4 +1,4 @@
-package ru.zalutskii.google.test.service.logPerformer
+package ru.zalutskii.google.test.service.log.performer
 
 import java.io.BufferedReader
 

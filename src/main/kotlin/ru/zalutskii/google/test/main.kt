@@ -4,7 +4,7 @@ import ru.zalutskii.google.test.parser.list.TestListLexerImpl
 import ru.zalutskii.google.test.parser.list.TestListParserImpl
 import ru.zalutskii.google.test.parser.log.TestLogParserImpl
 import ru.zalutskii.google.test.service.TestService
-import ru.zalutskii.google.test.service.logPerformer.LogPerformer
+import ru.zalutskii.google.test.service.log.performer.LogPerformer
 import ru.zalutskii.google.test.service.process.TestProcessImpl
 import ru.zalutskii.google.test.ui.main.MainPresenter
 import ru.zalutskii.google.test.ui.main.MainRouter

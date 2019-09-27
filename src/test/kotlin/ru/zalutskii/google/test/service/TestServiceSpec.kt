@@ -8,7 +8,7 @@ import io.kotlintest.specs.BehaviorSpec
 import org.mockito.internal.util.reflection.FieldSetter
 import ru.zalutskii.google.test.parser.list.TestListParser
 import ru.zalutskii.google.test.parser.list.TestTree
-import ru.zalutskii.google.test.service.logPerformer.LogPerformerInput
+import ru.zalutskii.google.test.service.log.performer.LogPerformerInput
 import ru.zalutskii.google.test.service.process.TestProcess
 import java.io.BufferedReader
 import java.io.File
@@ -79,7 +79,7 @@ class TestServiceSpec : BehaviorSpec() {
 
         outputMock = mock()
 
-        logPerformerMock = mock() {
+        logPerformerMock = mock {
             onBlocking { getLogForTest(any(), any()) }.thenReturn("suite.test")
             onBlocking { getLogForSuite(any()) }.thenReturn("suite")
             onBlocking { getFullLog() }.thenReturn("Full log")

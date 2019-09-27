@@ -2,8 +2,8 @@ package ru.zalutskii.google.test.service
 
 import ru.zalutskii.google.test.parser.list.TestListParser
 import ru.zalutskii.google.test.parser.list.TestTree
-import ru.zalutskii.google.test.service.logPerformer.LogPerformerInput
-import ru.zalutskii.google.test.service.logPerformer.LogPerformerOutput
+import ru.zalutskii.google.test.service.log.performer.LogPerformerInput
+import ru.zalutskii.google.test.service.log.performer.LogPerformerOutput
 import ru.zalutskii.google.test.service.process.TestProcess
 import java.io.File
 
