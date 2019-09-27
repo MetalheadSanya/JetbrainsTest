@@ -1,4 +1,4 @@
-package ru.zalutskii.google.test.parser.testLog
+package ru.zalutskii.google.test.parser.log
 
 sealed class Token
 

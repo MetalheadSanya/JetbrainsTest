@@ -1,7 +1,7 @@
-package ru.zalutskii.google.test.parser.testList
+package ru.zalutskii.google.test.parser.log
 
 import java.io.BufferedReader
 
-interface ITestListLexer {
+interface TestLogParser {
     fun parseToken(stream: BufferedReader): Token?
 }

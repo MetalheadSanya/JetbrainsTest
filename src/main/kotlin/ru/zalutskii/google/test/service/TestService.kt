@@ -1,14 +1,14 @@
 package ru.zalutskii.google.test.service
 
-import ru.zalutskii.google.test.parser.testList.TestListParser
-import ru.zalutskii.google.test.parser.testList.TestTree
+import ru.zalutskii.google.test.parser.list.TestListParser
+import ru.zalutskii.google.test.parser.list.TestTree
 import ru.zalutskii.google.test.service.logPerformer.LogPerformerInput
 import ru.zalutskii.google.test.service.logPerformer.LogPerformerOutput
 import ru.zalutskii.google.test.service.process.TestProcess
 import java.io.File
 
 class TestService(
-    private val parser: TestListParser,
+    private val parserImpl: TestListParser,
     private val process: TestProcess
 ) : TestServiceInput, LogPerformerOutput {
 
@@ -22,7 +22,7 @@ class TestService(
         process.open(file)
         logPerformer?.reset()
         val reader = process.readTestCases()
-        val tree = parser.parseTree(reader)
+        val tree = parserImpl.parseTree(reader)
 
         this.tree = tree
 
@@ -103,22 +103,24 @@ class TestService(
 
     private fun setFailedTestStatus(status: TestTree.Status) {
         var tree = this.tree ?: return
-        val suites = tree.suites.toMutableList()
-        suites.map { suite ->
-            if (suite.status != TestTree.Status.FAIL) {
-                suite
-            } else {
-                val functions = suite.functions.toMutableList()
-                functions.replaceAll { function ->
-                    if (function.status != TestTree.Status.FAIL) {
-                        function
-                    } else {
-                        function.copy(status = status)
-                    }
+        val suites = tree.suites
+            .toMutableList()
+            .map { suite ->
+                if (suite.status != TestTree.Status.FAIL) {
+                    suite
+                } else {
+                    val functions = suite.functions
+                        .toMutableList()
+                        .map { function ->
+                            if (function.status != TestTree.Status.FAIL) {
+                                function
+                            } else {
+                                function.copy(status = status)
+                            }
+                        }
+                    suite.copy(status = status, functions = functions)
                 }
-                suite.copy(status = status, functions = functions)
             }
-        }
         tree = tree.copy(suites = suites, status = status)
         this.tree = tree
     }

@@ -1,6 +1,6 @@
 package ru.zalutskii.google.test.service
 
-import ru.zalutskii.google.test.parser.testList.TestTree
+import ru.zalutskii.google.test.parser.list.TestTree
 import java.io.File
 
 interface TestServiceInput {

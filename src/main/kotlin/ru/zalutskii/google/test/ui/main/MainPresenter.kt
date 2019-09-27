@@ -5,7 +5,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.swing.Swing
-import ru.zalutskii.google.test.parser.testList.TestTree
+import ru.zalutskii.google.test.parser.list.TestTree
 import ru.zalutskii.google.test.service.TestServiceInput
 import ru.zalutskii.google.test.service.TestServiceOutput
 import ru.zalutskii.google.test.ui.openFile.OpenFileModuleOutput

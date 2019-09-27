@@ -1,11 +1,11 @@
-package ru.zalutskii.google.test.parser.testLog
+package ru.zalutskii.google.test.parser.log
 
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.StringSpec
 import java.io.BufferedReader
 import java.io.StringReader
 
-class TestLogLexerSpec : StringSpec() {
+class TestLogParserImplSpec : StringSpec() {
     init {
         "should parse simple log" {
             val output = "Running main() from /Users/zalutskii/Work/googleTest/googletest/src/gtest_main.cc\n" +
@@ -30,7 +30,7 @@ class TestLogLexerSpec : StringSpec() {
                     "[  PASSED  ] 6 tests."
 
             val reader = BufferedReader(StringReader(output))
-            val lexer = TestLogLexer()
+            val lexer = TestLogParserImpl()
 
             lexer.parseToken(reader).shouldBe(UnknownToken("Running main() from /Users/zalutskii/Work/googleTest/googletest/src/gtest_main.cc"))
             lexer.parseToken(reader).shouldBe(RunToken("[==========] Running 6 tests from 2 test suites."))
@@ -75,7 +75,7 @@ class TestLogLexerSpec : StringSpec() {
                     "[  PASSED  ] 1 test.\n"
 
             val reader = BufferedReader(StringReader(output))
-            val lexer = TestLogLexer()
+            val lexer = TestLogParserImpl()
 
             lexer.parseToken(reader).shouldBe(UnknownToken("Run this program with --terse_output to change the way it prints its output."))
             lexer.parseToken(reader).shouldBe(RunToken("[==========] Running 1 test from 1 test suite."))
@@ -120,7 +120,7 @@ class TestLogLexerSpec : StringSpec() {
                     " 1 FAILED TEST"
 
             val reader = BufferedReader(StringReader(output))
-            val lexer = TestLogLexer()
+            val lexer = TestLogParserImpl()
 
             lexer.parseToken(reader).shouldBe(UnknownToken("Run this program with --terse_output to change the way it prints its output."))
             lexer.parseToken(reader).shouldBe(RunToken("[==========] Running 2 tests from 1 test suite."))
@@ -166,7 +166,7 @@ class TestLogLexerSpec : StringSpec() {
                     "[  PASSED  ] 1 test.\n"
 
             val reader = BufferedReader(StringReader(output))
-            val lexer = TestLogLexer()
+            val lexer = TestLogParserImpl()
 
             lexer.parseToken(reader).shouldBe(UnknownToken("Running main() from /Users/zalutskii/Work/googleTest/googletest/src/gtest_main.cc"))
             lexer.parseToken(reader).shouldBe(RunToken("[==========] Running 1 test from 1 test suite."))
@@ -198,7 +198,7 @@ class TestLogLexerSpec : StringSpec() {
                     "[  PASSED  ] 1 test."
 
             val reader = BufferedReader(StringReader(output))
-            val lexer = TestLogLexer()
+            val lexer = TestLogParserImpl()
 
             lexer.parseToken(reader).shouldBe(UnknownToken("Running main() from /Users/zalutskii/Work/googleTest/googletest/src/gtest_main.cc"))
             lexer.parseToken(reader).shouldBe(RunToken("[==========] Running 1 test from 1 test suite."))

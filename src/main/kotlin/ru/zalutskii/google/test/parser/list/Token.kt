@@ -1,4 +1,4 @@
-package ru.zalutskii.google.test.parser.testList
+package ru.zalutskii.google.test.parser.list
 
 data class Token(val type: Type, val literal: String) {
     enum class Type {

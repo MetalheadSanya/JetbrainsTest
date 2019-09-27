@@ -1,9 +1,9 @@
 package ru.zalutskii.google.test.service.logPerformer
 
-import ru.zalutskii.google.test.parser.testLog.*
+import ru.zalutskii.google.test.parser.log.*
 import java.io.BufferedReader
 
-class LogPerformer(private val lexer: ITestLogLexer) : LogPerformerInput {
+class LogPerformer(private val parser: TestLogParser) : LogPerformerInput {
 
     var output: LogPerformerOutput? = null
 
@@ -23,7 +23,7 @@ class LogPerformer(private val lexer: ITestLogLexer) : LogPerformerInput {
 
         loop@ while (true) {
 
-            when (val token = lexer.parseToken(reader)) {
+            when (val token = parser.parseToken(reader)) {
                 is RunToken -> {
                     if (currentTest != null) {
                         logByTest[currentTest] += token.literal

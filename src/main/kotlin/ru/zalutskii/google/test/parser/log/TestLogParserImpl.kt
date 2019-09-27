@@ -1,8 +1,8 @@
-package ru.zalutskii.google.test.parser.testLog
+package ru.zalutskii.google.test.parser.log
 
 import java.io.BufferedReader
 
-class TestLogLexer : ITestLogLexer {
+class TestLogParserImpl : TestLogParser {
     override fun parseToken(stream: BufferedReader): Token? {
         val line = stream.readLine()
 

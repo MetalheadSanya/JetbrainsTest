@@ -1,4 +1,4 @@
-package ru.zalutskii.google.test.parser.testList
+package ru.zalutskii.google.test.parser.list
 
 data class TestTree(val suites: List<Case>, val status: Status = Status.READY) {
     enum class Status {
