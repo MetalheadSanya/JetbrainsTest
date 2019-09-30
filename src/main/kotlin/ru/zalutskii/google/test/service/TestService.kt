@@ -1,38 +1,45 @@
 package ru.zalutskii.google.test.service
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.coroutineScope
 import ru.zalutskii.google.test.parser.list.TestListParser
 import ru.zalutskii.google.test.parser.list.TestTree
 import ru.zalutskii.google.test.service.log.performer.LogPerformerInput
 import ru.zalutskii.google.test.service.log.performer.LogPerformerOutput
 import ru.zalutskii.google.test.service.process.TestProcess
 import java.io.File
+import java.util.concurrent.Executors
+import kotlin.coroutines.CoroutineContext
 
 class TestService(
     private val parserImpl: TestListParser,
     private val process: TestProcess
-) : TestServiceInput, LogPerformerOutput {
+) : TestServiceInput, LogPerformerOutput, CoroutineScope {
 
     var output: TestServiceOutput? = null
     var logPerformer: LogPerformerInput? = null
 
-    @Volatile
+    override val coroutineContext: CoroutineContext = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+
     private var tree: TestTree? = null
 
-    override suspend fun open(file: File) {
+    override suspend fun open(file: File) = coroutineScope {
         process.open(file)
         logPerformer?.reset()
         val reader = process.readTestCases()
-        val tree = parserImpl.parseTree(reader)
+        val parsedTree = parserImpl.parseTree(reader)
 
-        this.tree = tree
+        tree = parsedTree
 
-        output?.didLoadTestTree(tree)
+        output?.didLoadTestTree(parsedTree)
         output?.didProcessOutput("")
+        Unit
     }
 
-    override suspend fun run() {
+    override suspend fun run() = coroutineScope {
         try {
-            val logPerformer = this.logPerformer ?: return
+            val logPerformer = this@TestService.logPerformer ?: return@coroutineScope
 
             logPerformer.reset()
 
@@ -62,9 +69,9 @@ class TestService(
         this.tree = tree
     }
 
-    override suspend fun rerunFailedTests() {
+    override suspend fun rerunFailedTests() = coroutineScope {
         try {
-            val logPerformer = this.logPerformer ?: return
+            val logPerformer = this@TestService.logPerformer ?: return@coroutineScope
 
             logPerformer.reset()
 
@@ -73,7 +80,7 @@ class TestService(
             val failedTests = getFailedTests()
             if (failedTests.none()) {
                 output?.didFinishRun(getTreeStatus())
-                return
+                return@coroutineScope
             }
 
             setFailedTestStatus(TestTree.Status.QUEUE)
@@ -125,30 +132,32 @@ class TestService(
         this.tree = tree
     }
 
-    override suspend fun stop() {
+    override suspend fun stop() = coroutineScope {
         process.stop()
     }
 
-    override suspend fun showLog(suite: String, test: String) {
-        val log = logPerformer?.getLogForTest(suite, test) ?: return
+    override suspend fun showLog(suite: String, test: String) = coroutineScope {
+        val log = logPerformer?.getLogForTest(suite, test) ?: return@coroutineScope
         output?.didProcessOutput(log)
     }
 
-    override suspend fun showLog(suite: String) {
-        val log = logPerformer?.getLogForSuite(suite) ?: return
+    override suspend fun showLog(suite: String) = coroutineScope {
+        val log = logPerformer?.getLogForSuite(suite) ?: return@coroutineScope
         output?.didProcessOutput(log)
     }
 
-    override suspend fun showLog() {
+    override suspend fun showLog() = coroutineScope {
         val log = logPerformer?.getFullLog() ?: ""
         output?.didProcessOutput(log)
+        Unit
     }
 
-    override suspend fun didProcessLog(log: String) {
+    override suspend fun didProcessLog(log: String) = coroutineScope {
         output?.didProcessOutput(log)
+        Unit
     }
 
-    override suspend fun didStartTestSuite(suiteName: String) {
+    override suspend fun didStartTestSuite(suiteName: String) = coroutineScope {
         updateSuiteStatus(suiteName, TestTree.Status.RUN)
     }
 
@@ -171,9 +180,9 @@ class TestService(
         output?.didUpdateTestTree(tree)
     }
 
-    override suspend fun didEndTestSuite(suiteName: String, milliseconds: Int) {
-        val tree = this.tree ?: return
-        val suite = tree.suites.firstOrNull { it.name == suiteName } ?: return
+    override suspend fun didEndTestSuite(suiteName: String, milliseconds: Int) = coroutineScope {
+        val tree = this@TestService.tree ?: return@coroutineScope
+        val suite = tree.suites.firstOrNull { it.name == suiteName } ?: return@coroutineScope
         val failed = suite.functions.map { it.status == TestTree.Status.FAIL }
             .firstOrNull { it } ?: false
         val status = when (failed) {
@@ -183,7 +192,7 @@ class TestService(
         updateSuiteStatus(suiteName, status, "$milliseconds")
     }
 
-    override suspend fun didStartTest(suiteName: String, testName: String) {
+    override suspend fun didStartTest(suiteName: String, testName: String) = coroutineScope {
         updateTestStatus(suiteName, testName, TestTree.Status.RUN)
     }
 
@@ -216,20 +225,20 @@ class TestService(
         return
     }
 
-    override suspend fun didPassTest(suiteName: String, testName: String, milliseconds: Int) {
+    override suspend fun didPassTest(suiteName: String, testName: String, milliseconds: Int) = coroutineScope {
         updateTestStatus(suiteName, testName, TestTree.Status.SUCCESS, "$milliseconds")
     }
 
-    override suspend fun didFailTest(suiteName: String, testName: String, milliseconds: Int) {
+    override suspend fun didFailTest(suiteName: String, testName: String, milliseconds: Int) = coroutineScope {
         updateTestStatus(suiteName, testName, TestTree.Status.FAIL, "$milliseconds")
     }
 
-    override suspend fun didStartTest() {
+    override suspend fun didStartTest() = coroutineScope {
         updateRootStatus(TestTree.Status.RUN)
     }
 
-    override suspend fun didEndTest() {
-        val tree = this.tree ?: return
+    override suspend fun didEndTest() = coroutineScope() {
+        val tree = this@TestService.tree ?: return@coroutineScope
         val failed = tree.suites.map { it.status == TestTree.Status.FAIL }
             .firstOrNull { it } ?: false
         val status = when (failed) {
@@ -246,5 +255,4 @@ class TestService(
 
         output?.didUpdateTestTree(tree)
     }
-
 }

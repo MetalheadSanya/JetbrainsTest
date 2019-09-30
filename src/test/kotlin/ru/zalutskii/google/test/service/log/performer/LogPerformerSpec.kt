@@ -11,7 +11,7 @@ import java.io.StringReader
 
 class LogPerformerSpec : StringSpec() {
     init {
-        "tesst" {
+        "test simple log" {
             val parser = mock<TestLogParser> {
                 on { parseToken(any()) }.doReturnConsecutively(
                     listOf(
@@ -316,7 +316,7 @@ class LogPerformerSpec : StringSpec() {
             )
         }
 
-        "te" {
+        "test log with errors" {
             val parser = mock<TestLogParser> {
                 on { parseToken(any()) }.doReturnConsecutively(
                     listOf(

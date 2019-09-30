@@ -1,10 +1,18 @@
 package ru.zalutskii.google.test.service.log.performer
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.coroutineScope
 import ru.zalutskii.google.test.parser.log.*
 import java.io.BufferedReader
+import java.util.concurrent.Executors
+import kotlin.coroutines.CoroutineContext
 
 class LogPerformer(private val parser: TestLogParser) :
-    LogPerformerInput {
+    LogPerformerInput,
+    CoroutineScope {
+
+    override val coroutineContext: CoroutineContext = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
 
     var output: LogPerformerOutput? = null
 
@@ -13,12 +21,12 @@ class LogPerformer(private val parser: TestLogParser) :
     private var logBySuite = mutableMapOf<String, String>()
     private var logByTest = mutableMapOf<String, String>()
 
-    override suspend fun reset() {
+    override suspend fun reset() = coroutineScope {
         log = ""
         logByTest = mutableMapOf()
     }
 
-    override suspend fun perform(reader: BufferedReader) {
+    override suspend fun perform(reader: BufferedReader) = coroutineScope {
         var currentTest: String? = null
         var currentSuite: String? = null
 
@@ -114,9 +122,17 @@ class LogPerformer(private val parser: TestLogParser) :
         }
     }
 
-    override suspend fun getLogForTest(suite: String, test: String): String = logByTest["$suite.$test"] ?: ""
 
-    override suspend fun getLogForSuite(suite: String): String = logBySuite[suite] ?: ""
+    override suspend fun getLogForTest(suite: String, test: String): String = coroutineScope {
+        logByTest["$suite.$test"] ?: ""
+    }
 
-    override suspend fun getFullLog(): String = log
+    override suspend fun getLogForSuite(suite: String): String = coroutineScope {
+        logBySuite[suite] ?: ""
+    }
+
+    override suspend fun getFullLog(): String = coroutineScope {
+        log
+    }
 }
+
