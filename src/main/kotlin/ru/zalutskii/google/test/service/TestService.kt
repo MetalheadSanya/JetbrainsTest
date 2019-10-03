@@ -79,7 +79,6 @@ class TestService(
 
             val failedTests = getFailedTests()
             if (failedTests.none()) {
-                output?.didFinishRun(getTreeStatus())
                 return@coroutineScope
             }
 
