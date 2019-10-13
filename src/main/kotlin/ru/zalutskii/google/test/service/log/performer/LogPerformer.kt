@@ -35,99 +35,77 @@ class LogPerformer(private val parser: TestLogParser) :
         val logByTest = mutableMapOf<String, StringBuilder>()
 
         loop@ while (true) {
+            val token = parser.parseToken(reader)
 
-            when (val token = parser.parseToken(reader)) {
+            when (token) {
                 is RunToken -> {
-                    if (currentTest != null) {
-                        logByTest[currentTest]?.append(token.literal)
-                    }
-                    if (currentSuite != null) {
-                        logBySuite[currentSuite]?.append(token.literal)
-                    }
-                    log.append(token.literal)
-                    output?.didProcessLog(log.toString())
                     output?.didStartTest()
                 }
                 is StopToken -> {
-                    if (currentTest != null) {
-                        logByTest[currentTest]?.append(token.literal)
-                    }
-                    if (currentSuite != null) {
-                        logBySuite[currentSuite]?.append(token.literal)
-                    }
-                    log.append(token.literal)
-                    output?.didProcessLog(log.toString())
                     output?.didEndTest()
                 }
                 is SuiteStartToken -> {
                     currentSuite = token.suite
-                    logBySuite[token.suite] = StringBuilder(token.literal)
-                    log.append(token.literal)
-                    output?.didProcessLog(log.toString())
                     output?.didStartTestSuite(token.suite)
                 }
                 is SuiteEndToken -> {
-                    currentSuite = null
-                    logBySuite[token.suite]?.append(token.literal)
-                    log.append(token.literal)
-                    output?.didProcessLog(log.toString())
                     output?.didEndTestSuite(token.suite, token.milliseconds)
                 }
                 is RunTestToken -> {
                     currentTest = "${token.suite}.${token.test}"
-                    logBySuite[token.suite]?.append(token.literal)
-                    logByTest[currentTest] = StringBuilder(token.literal)
-                    log.append(token.literal)
-                    output?.didProcessLog(log.toString())
                     output?.didStartTest(token.suite, token.test)
                 }
                 is OkTestToken -> {
-                    currentTest = "${token.suite}.${token.test}"
-                    logBySuite[token.suite]?.append(token.literal)
-                    logByTest[currentTest]?.append(token.literal)
-                    log.append(token.literal)
-                    currentTest = null
-                    output?.didProcessLog(log.toString())
                     output?.didPassTest(token.suite, token.test, token.milliseconds)
                 }
                 is FailedTestToken -> {
-                    currentTest = "${token.suite}.${token.test}"
-                    logBySuite[token.suite]?.append(token.literal)
-                    logByTest[currentTest]?.append(token.literal)
-                    log.append(token.literal)
-                    currentTest = null
-                    output?.didProcessLog(log.toString())
                     output?.didFailTest(token.suite, token.test, token.milliseconds)
                 }
                 is PassedToken -> {
-                    log.append(token.literal)
-                    output?.didProcessLog(log.toString())
                 }
                 is UnknownToken -> {
-                    if (currentTest != null) {
-                        logByTest[currentTest]?.append(token.literal)
-                    }
-                    if (currentSuite != null) {
-                        logBySuite[currentSuite]?.append(token.literal)
-                    }
-                    log.append(token.literal)
-                    output?.didProcessLog(log.toString())
                 }
                 null -> break@loop
             }
 
+            log.append(token.literal)
+            output?.didProcessLog(log.toString())
             log.append("\n")
-            if (currentTest != null) {
-                logByTest[currentTest]?.append("\n")
-            }
-            if (currentSuite != null) {
-                logBySuite[currentSuite]?.append("\n")
+
+            writeToLog(logBySuite, currentSuite, token)
+            writeToLog(logByTest, currentTest, token)
+
+            when (token) {
+                is SuiteEndToken -> {
+                    currentSuite = null
+                }
+                is OkTestToken -> {
+                    currentTest = null
+                }
+                is FailedTestToken -> {
+                    currentTest = null
+                }
             }
         }
 
         this@LogPerformer.log = log.toString()
         this@LogPerformer.logBySuite = logBySuite.mapValues { builder -> builder.toString() }
         this@LogPerformer.logByTest = logByTest.mapValues { builder -> builder.toString() }
+    }
+
+    private fun writeToLog(
+        logBuilders: MutableMap<String, StringBuilder>,
+        key: String?,
+        token: Token
+    ) {
+        if (key != null) {
+            if (logBuilders[key] != null) {
+                logBuilders[key]?.append(token.literal)
+            } else {
+                logBuilders[key] = StringBuilder(token.literal)
+            }
+            logBuilders[key]?.append("\n")
+        }
     }
 
 

@@ -1,12 +1,13 @@
 package ru.zalutskii.google.test.ui.main
 
-import java.awt.*
+import java.awt.Component
+import java.awt.FlowLayout
 import javax.swing.*
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeCellRenderer
 import javax.swing.tree.TreeCellRenderer
 
-class TestCellRenderer() : TreeCellRenderer {
+class TestCellRenderer : TreeCellRenderer {
 
     private val cell = JPanel()
 
@@ -39,53 +40,58 @@ class TestCellRenderer() : TreeCellRenderer {
         row: Int,
         hasFocus: Boolean
     ): Component {
-        return when (data) {
+        val model = extractViewModel(data)
+        return model?.let { configureCell(it, selected, tree) } ?: defaultRenderer.getTreeCellRendererComponent(
+            tree,
+            data,
+            selected,
+            expanded,
+            leaf,
+            row,
+            hasFocus
+        )
+    }
+
+    private fun extractViewModel(data: Any?): TestViewModel? =
+        when (data) {
             is DefaultMutableTreeNode -> {
                 when (val userObject = data.userObject) {
                     is TestViewModel -> {
-                        nameLabel.text = userObject.name
-
-                        nameLabel.icon = when(userObject.status) {
-                            null -> null
-                            TestViewModel.Status.QUEUED -> getImage("queued_status.png")
-                            TestViewModel.Status.RUN -> getImage("run_status.png")
-                            TestViewModel.Status.FAIL -> getImage("fail_status.png")
-                            TestViewModel.Status.SUCCESS -> getImage("success_status.png")
-                        }
-
-                        timeLabel.text = when (val time = userObject.time) {
-                            null -> ""
-                            else -> time
-                        }
-
-                        when (selected) {
-                            true -> cell.background = backgroundSelectionColor
-                            false -> cell.background = backgroundNonSelectionColor
-                        }
-                        cell.isEnabled = tree?.isEnabled ?: false
-                        cell
+                        userObject
                     }
-                    else -> defaultRenderer.getTreeCellRendererComponent(
-                        tree,
-                        data,
-                        selected,
-                        expanded,
-                        leaf,
-                        row,
-                        hasFocus
-                    )
+                    else -> null
                 }
             }
-            else -> defaultRenderer.getTreeCellRendererComponent(
-                tree,
-                data,
-                selected,
-                expanded,
-                leaf,
-                row,
-                hasFocus
-            )
+            else -> null
         }
+
+
+    private fun configureCell(
+        userObject: TestViewModel,
+        selected: Boolean,
+        tree: JTree?
+    ): JPanel {
+        nameLabel.text = userObject.name
+
+        nameLabel.icon = when (userObject.status) {
+            null -> null
+            TestViewModel.Status.QUEUED -> getImage("queued_status.png")
+            TestViewModel.Status.RUN -> getImage("run_status.png")
+            TestViewModel.Status.FAIL -> getImage("fail_status.png")
+            TestViewModel.Status.SUCCESS -> getImage("success_status.png")
+        }
+
+        timeLabel.text = when (val time = userObject.time) {
+            null -> ""
+            else -> time
+        }
+
+        when (selected) {
+            true -> cell.background = backgroundSelectionColor
+            false -> cell.background = backgroundNonSelectionColor
+        }
+        cell.isEnabled = tree?.isEnabled ?: false
+        return cell
     }
 
     private fun getImage(name: String): ImageIcon =

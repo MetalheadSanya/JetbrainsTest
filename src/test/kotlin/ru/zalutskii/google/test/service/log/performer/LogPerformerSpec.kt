@@ -52,23 +52,24 @@ class LogPerformerSpec : StringSpec() {
             order.verify(outputMock).didProcessLog(
                 "Running main() from /Users/zalutskii/Work/googleTest/googletest/src/gtest_main.cc"
             )
+            order.verify(outputMock).didStartTest()
             order.verify(outputMock).didProcessLog(
                 "Running main() from /Users/zalutskii/Work/googleTest/googletest/src/gtest_main.cc\n" +
                         "[==========] Running 6 tests from 2 test suites."
             )
-            order.verify(outputMock).didStartTest()
             order.verify(outputMock).didProcessLog(
                 "Running main() from /Users/zalutskii/Work/googleTest/googletest/src/gtest_main.cc\n" +
                         "[==========] Running 6 tests from 2 test suites.\n" +
                         "[----------] Global test environment set-up."
             )
+            order.verify(outputMock).didStartTestSuite("FactorialTest")
             order.verify(outputMock).didProcessLog(
                 "Running main() from /Users/zalutskii/Work/googleTest/googletest/src/gtest_main.cc\n" +
                         "[==========] Running 6 tests from 2 test suites.\n" +
                         "[----------] Global test environment set-up.\n" +
                         "[----------] 3 tests from FactorialTest"
             )
-            order.verify(outputMock).didStartTestSuite("FactorialTest")
+            order.verify(outputMock).didStartTest("FactorialTest", "Negative")
             order.verify(outputMock).didProcessLog(
                 "Running main() from /Users/zalutskii/Work/googleTest/googletest/src/gtest_main.cc\n" +
                         "[==========] Running 6 tests from 2 test suites.\n" +
@@ -76,7 +77,7 @@ class LogPerformerSpec : StringSpec() {
                         "[----------] 3 tests from FactorialTest\n" +
                         "[ RUN      ] FactorialTest.Negative"
             )
-            order.verify(outputMock).didStartTest("FactorialTest", "Negative")
+            order.verify(outputMock).didPassTest("FactorialTest", "Negative", 0)
             order.verify(outputMock).didProcessLog(
                 "Running main() from /Users/zalutskii/Work/googleTest/googletest/src/gtest_main.cc\n" +
                         "[==========] Running 6 tests from 2 test suites.\n" +
@@ -85,7 +86,7 @@ class LogPerformerSpec : StringSpec() {
                         "[ RUN      ] FactorialTest.Negative\n" +
                         "[       OK ] FactorialTest.Negative (0 ms)"
             )
-            order.verify(outputMock).didPassTest("FactorialTest", "Negative", 0)
+            order.verify(outputMock).didStartTest("FactorialTest", "Zero")
             order.verify(outputMock).didProcessLog(
                 "Running main() from /Users/zalutskii/Work/googleTest/googletest/src/gtest_main.cc\n" +
                         "[==========] Running 6 tests from 2 test suites.\n" +
@@ -95,7 +96,7 @@ class LogPerformerSpec : StringSpec() {
                         "[       OK ] FactorialTest.Negative (0 ms)\n" +
                         "[ RUN      ] FactorialTest.Zero"
             )
-            order.verify(outputMock).didStartTest("FactorialTest", "Zero")
+            order.verify(outputMock).didPassTest("FactorialTest", "Zero", 0)
             order.verify(outputMock).didProcessLog(
                 "Running main() from /Users/zalutskii/Work/googleTest/googletest/src/gtest_main.cc\n" +
                         "[==========] Running 6 tests from 2 test suites.\n" +
@@ -106,7 +107,7 @@ class LogPerformerSpec : StringSpec() {
                         "[ RUN      ] FactorialTest.Zero\n" +
                         "[       OK ] FactorialTest.Zero (0 ms)"
             )
-            order.verify(outputMock).didPassTest("FactorialTest", "Zero", 0)
+            order.verify(outputMock).didStartTest("FactorialTest", "Positive")
             order.verify(outputMock).didProcessLog(
                 "Running main() from /Users/zalutskii/Work/googleTest/googletest/src/gtest_main.cc\n" +
                         "[==========] Running 6 tests from 2 test suites.\n" +
@@ -118,7 +119,7 @@ class LogPerformerSpec : StringSpec() {
                         "[       OK ] FactorialTest.Zero (0 ms)\n" +
                         "[ RUN      ] FactorialTest.Positive"
             )
-            order.verify(outputMock).didStartTest("FactorialTest", "Positive")
+            order.verify(outputMock).didPassTest("FactorialTest", "Positive", 0)
             order.verify(outputMock).didProcessLog(
                 "Running main() from /Users/zalutskii/Work/googleTest/googletest/src/gtest_main.cc\n" +
                         "[==========] Running 6 tests from 2 test suites.\n" +
@@ -131,7 +132,7 @@ class LogPerformerSpec : StringSpec() {
                         "[ RUN      ] FactorialTest.Positive\n" +
                         "[       OK ] FactorialTest.Positive (0 ms)"
             )
-            order.verify(outputMock).didPassTest("FactorialTest", "Positive", 0)
+            order.verify(outputMock).didEndTestSuite("FactorialTest", 0)
             order.verify(outputMock).didProcessLog(
                 "Running main() from /Users/zalutskii/Work/googleTest/googletest/src/gtest_main.cc\n" +
                         "[==========] Running 6 tests from 2 test suites.\n" +
@@ -145,7 +146,6 @@ class LogPerformerSpec : StringSpec() {
                         "[       OK ] FactorialTest.Positive (0 ms)\n" +
                         "[----------] 3 tests from FactorialTest (0 ms total)"
             )
-            order.verify(outputMock).didEndTestSuite("FactorialTest", 0)
             order.verify(outputMock).didProcessLog(
                 "Running main() from /Users/zalutskii/Work/googleTest/googletest/src/gtest_main.cc\n" +
                         "[==========] Running 6 tests from 2 test suites.\n" +
@@ -160,6 +160,7 @@ class LogPerformerSpec : StringSpec() {
                         "[----------] 3 tests from FactorialTest (0 ms total)\n" +
                         ""
             )
+            order.verify(outputMock).didStartTestSuite("IsPrimeTest")
             order.verify(outputMock).didProcessLog(
                 "Running main() from /Users/zalutskii/Work/googleTest/googletest/src/gtest_main.cc\n" +
                         "[==========] Running 6 tests from 2 test suites.\n" +
@@ -175,7 +176,7 @@ class LogPerformerSpec : StringSpec() {
                         "\n" +
                         "[----------] 1 test from IsPrimeTest"
             )
-            order.verify(outputMock).didStartTestSuite("IsPrimeTest")
+            order.verify(outputMock).didStartTest("IsPrimeTest", "Negative")
             order.verify(outputMock).didProcessLog(
                 "Running main() from /Users/zalutskii/Work/googleTest/googletest/src/gtest_main.cc\n" +
                         "[==========] Running 6 tests from 2 test suites.\n" +
@@ -192,7 +193,7 @@ class LogPerformerSpec : StringSpec() {
                         "[----------] 1 test from IsPrimeTest\n" +
                         "[ RUN      ] IsPrimeTest.Negative"
             )
-            order.verify(outputMock).didStartTest("IsPrimeTest", "Negative")
+            order.verify(outputMock).didPassTest("IsPrimeTest", "Negative", 0)
             order.verify(outputMock).didProcessLog(
                 "Running main() from /Users/zalutskii/Work/googleTest/googletest/src/gtest_main.cc\n" +
                         "[==========] Running 6 tests from 2 test suites.\n" +
@@ -210,7 +211,7 @@ class LogPerformerSpec : StringSpec() {
                         "[ RUN      ] IsPrimeTest.Negative\n" +
                         "[       OK ] IsPrimeTest.Negative (0 ms)"
             )
-            order.verify(outputMock).didPassTest("IsPrimeTest", "Negative", 0)
+            order.verify(outputMock).didEndTestSuite("IsPrimeTest", 0)
             order.verify(outputMock).didProcessLog(
                 "Running main() from /Users/zalutskii/Work/googleTest/googletest/src/gtest_main.cc\n" +
                         "[==========] Running 6 tests from 2 test suites.\n" +
@@ -229,7 +230,6 @@ class LogPerformerSpec : StringSpec() {
                         "[       OK ] IsPrimeTest.Negative (0 ms)\n" +
                         "[----------] 1 test from IsPrimeTest (0 ms total)"
             )
-            order.verify(outputMock).didEndTestSuite("IsPrimeTest", 0)
             order.verify(outputMock).didProcessLog(
                 "Running main() from /Users/zalutskii/Work/googleTest/googletest/src/gtest_main.cc\n" +
                         "[==========] Running 6 tests from 2 test suites.\n" +
@@ -269,6 +269,7 @@ class LogPerformerSpec : StringSpec() {
                         "\n" +
                         "[----------] Global test environment tear-down"
             )
+            order.verify(outputMock).didEndTest()
             order.verify(outputMock).didProcessLog(
                 "Running main() from /Users/zalutskii/Work/googleTest/googletest/src/gtest_main.cc\n" +
                         "[==========] Running 6 tests from 2 test suites.\n" +
@@ -291,7 +292,6 @@ class LogPerformerSpec : StringSpec() {
                         "[==========] 6 tests from 2 test suites ran. (0 ms total)"
 
             )
-            order.verify(outputMock).didEndTest()
             order.verify(outputMock).didProcessLog(
                 "Running main() from /Users/zalutskii/Work/googleTest/googletest/src/gtest_main.cc\n" +
                         "[==========] Running 6 tests from 2 test suites.\n" +
@@ -364,24 +364,25 @@ class LogPerformerSpec : StringSpec() {
             order.verify(outputMock).didProcessLog(
                 "Run this program with --terse_output to change the way it prints its output."
             )
+            order.verify(outputMock).didStartTest()
             order.verify(outputMock).didProcessLog(
                 "Run this program with --terse_output to change the way it prints its output.\n" +
                         "[==========] Running 2 tests from 1 test suite."
             )
-            order.verify(outputMock).didStartTest()
             order.verify(outputMock).didProcessLog(
                 "Run this program with --terse_output to change the way it prints its output.\n" +
                         "[==========] Running 2 tests from 1 test suite.\n" +
                         "[----------] Global test environment set-up."
             )
 
+            order.verify(outputMock).didStartTestSuite("CustomOutputTest")
             order.verify(outputMock).didProcessLog(
                 "Run this program with --terse_output to change the way it prints its output.\n" +
                         "[==========] Running 2 tests from 1 test suite.\n" +
                         "[----------] Global test environment set-up.\n" +
                         "[----------] 2 tests from CustomOutputTest"
             )
-            order.verify(outputMock).didStartTestSuite("CustomOutputTest")
+            order.verify(outputMock).didStartTest("CustomOutputTest", "Succeeds")
             order.verify(outputMock).didProcessLog(
                 "Run this program with --terse_output to change the way it prints its output.\n" +
                         "[==========] Running 2 tests from 1 test suite.\n" +
@@ -389,7 +390,7 @@ class LogPerformerSpec : StringSpec() {
                         "[----------] 2 tests from CustomOutputTest\n" +
                         "[ RUN      ] CustomOutputTest.Succeeds"
             )
-            order.verify(outputMock).didStartTest("CustomOutputTest", "Succeeds")
+            order.verify(outputMock).didPassTest("CustomOutputTest", "Succeeds", 0)
             order.verify(outputMock).didProcessLog(
                 "Run this program with --terse_output to change the way it prints its output.\n" +
                         "[==========] Running 2 tests from 1 test suite.\n" +
@@ -398,7 +399,7 @@ class LogPerformerSpec : StringSpec() {
                         "[ RUN      ] CustomOutputTest.Succeeds\n" +
                         "[       OK ] CustomOutputTest.Succeeds (0 ms)"
             )
-            order.verify(outputMock).didPassTest("CustomOutputTest", "Succeeds", 0)
+            order.verify(outputMock).didStartTest("CustomOutputTest", "Fails")
             order.verify(outputMock).didProcessLog(
                 "Run this program with --terse_output to change the way it prints its output.\n" +
                         "[==========] Running 2 tests from 1 test suite.\n" +
@@ -408,7 +409,6 @@ class LogPerformerSpec : StringSpec() {
                         "[       OK ] CustomOutputTest.Succeeds (0 ms)\n" +
                         "[ RUN      ] CustomOutputTest.Fails"
             )
-            order.verify(outputMock).didStartTest("CustomOutputTest", "Fails")
             order.verify(outputMock).didProcessLog(
                 "Run this program with --terse_output to change the way it prints its output.\n" +
                         "[==========] Running 2 tests from 1 test suite.\n" +
@@ -469,6 +469,7 @@ class LogPerformerSpec : StringSpec() {
                         "  2\n" +
                         "This test fails in order to demonstrate alternative failure messages"
             )
+            order.verify(outputMock).didFailTest("CustomOutputTest", "Fails", 0)
             order.verify(outputMock).didProcessLog(
                 "Run this program with --terse_output to change the way it prints its output.\n" +
                         "[==========] Running 2 tests from 1 test suite.\n" +
@@ -484,7 +485,7 @@ class LogPerformerSpec : StringSpec() {
                         "This test fails in order to demonstrate alternative failure messages\n" +
                         "[  FAILED  ] CustomOutputTest.Fails (0 ms)"
             )
-            order.verify(outputMock).didFailTest("CustomOutputTest", "Fails", 0)
+            order.verify(outputMock).didEndTestSuite("CustomOutputTest", 0)
             order.verify(outputMock).didProcessLog(
                 "Run this program with --terse_output to change the way it prints its output.\n" +
                         "[==========] Running 2 tests from 1 test suite.\n" +
@@ -501,7 +502,6 @@ class LogPerformerSpec : StringSpec() {
                         "[  FAILED  ] CustomOutputTest.Fails (0 ms)\n" +
                         "[----------] 2 tests from CustomOutputTest (0 ms total)"
             )
-            order.verify(outputMock).didEndTestSuite("CustomOutputTest", 0)
             order.verify(outputMock).didProcessLog(
                 "Run this program with --terse_output to change the way it prints its output.\n" +
                         "[==========] Running 2 tests from 1 test suite.\n" +
@@ -537,6 +537,7 @@ class LogPerformerSpec : StringSpec() {
                         "\n" +
                         "[----------] Global test environment tear-down"
             )
+            order.verify(outputMock).didEndTest()
             order.verify(outputMock).didProcessLog(
                 "Run this program with --terse_output to change the way it prints its output.\n" +
                         "[==========] Running 2 tests from 1 test suite.\n" +
@@ -556,7 +557,6 @@ class LogPerformerSpec : StringSpec() {
                         "[----------] Global test environment tear-down\n" +
                         "[==========] 2 tests from 1 test suite ran. (0 ms total)"
             )
-            order.verify(outputMock).didEndTest()
             order.verify(outputMock).didProcessLog(
                 "Run this program with --terse_output to change the way it prints its output.\n" +
                         "[==========] Running 2 tests from 1 test suite.\n" +
