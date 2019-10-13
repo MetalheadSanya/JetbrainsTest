@@ -54,7 +54,7 @@ class TestProcessImpl : TestProcess {
             FileHadNotBeenOpenedException
         }
 
-        val filter = "--gtest_filter=" + list.joinToString { it }
+        val filter = "--gtest_filter=" + list.joinToString(":")
 
         val command = listOf(path, filter)
         process = ProcessBuilder()
