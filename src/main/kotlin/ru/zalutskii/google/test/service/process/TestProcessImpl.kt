@@ -2,10 +2,12 @@ package ru.zalutskii.google.test.service.process
 
 import java.io.BufferedReader
 import java.io.File
+import java.io.IOException
 import java.io.InputStreamReader
-import java.io.StringReader
 
 class TestProcessImpl : TestProcess {
+
+    object FileHadNotBeenOpenedException : IOException("File had not been opened")
 
     private lateinit var path: String
 
@@ -17,7 +19,7 @@ class TestProcessImpl : TestProcess {
 
     override fun readTestCases(): BufferedReader {
         if (!::path.isInitialized) {
-            BufferedReader(StringReader(""))
+            FileHadNotBeenOpenedException
         }
 
         val command = listOf(path, "--gtest_list_tests")
@@ -33,7 +35,7 @@ class TestProcessImpl : TestProcess {
 
     override fun runTestCases(): BufferedReader {
         if (!::path.isInitialized) {
-            BufferedReader(StringReader(""))
+            throw FileHadNotBeenOpenedException
         }
 
         val command = listOf(path)
@@ -49,7 +51,7 @@ class TestProcessImpl : TestProcess {
 
     override fun runTests(list: Iterable<String>): BufferedReader {
         if (!::path.isInitialized) {
-            BufferedReader(StringReader(""))
+            FileHadNotBeenOpenedException
         }
 
         val filter = "--gtest_filter=" + list.joinToString { it }
@@ -67,7 +69,7 @@ class TestProcessImpl : TestProcess {
 
     override fun stop() {
         if (!::process.isInitialized) {
-            return
+            FileHadNotBeenOpenedException
         }
 
         process.destroyForcibly()
