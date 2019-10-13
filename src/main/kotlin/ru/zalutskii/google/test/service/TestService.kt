@@ -107,32 +107,52 @@ class TestService(
             }
     }
 
-    private fun setFailedTestStatus(status: TestTree.Status) {
+    private fun setTestStatus(to: TestTree.Status, condition: (TestTree.Status) -> Boolean) {
         var tree = this.tree ?: return
         val suites = tree.suites
             .toMutableList()
             .map { suite ->
-                if (suite.status != TestTree.Status.FAIL) {
+                if (!condition(suite.status)) {
                     suite
                 } else {
                     val functions = suite.functions
                         .toMutableList()
                         .map { function ->
-                            if (function.status != TestTree.Status.FAIL) {
+                            if (!condition(function.status)) {
                                 function
                             } else {
-                                function.copy(status = status)
+                                function.copy(status = to)
                             }
                         }
-                    suite.copy(status = status, functions = functions)
+                    suite.copy(status = to, functions = functions)
                 }
             }
+        val status = if (condition(tree.status)) {
+            to
+        } else {
+            tree.status
+        }
         tree = tree.copy(suites = suites, status = status)
         this.tree = tree
     }
 
+    private fun setFailedTestStatus(status: TestTree.Status) {
+        setTestStatus(status) {
+            it == TestTree.Status.FAIL
+        }
+    }
+
+    private fun setUnfinishedTestsToReady() {
+        setTestStatus(TestTree.Status.READY) {
+            it != TestTree.Status.FAIL && it != TestTree.Status.SUCCESS
+        }
+    }
+
     override suspend fun stop() = coroutineScope {
         process.stop()
+        setUnfinishedTestsToReady()
+        tree?.let { output?.didUpdateTestTree(it) }
+        Unit
     }
 
     override suspend fun showLog(suite: String, test: String) = coroutineScope {

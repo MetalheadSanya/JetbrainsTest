@@ -137,8 +137,31 @@ class TestServiceSpec : BehaviorSpec() {
 
             `when`("stop called") {
                 then("process must stop") {
+                    val startFunc11 = TestTree.Case.Function("Func11", null, TestTree.Status.SUCCESS)
+                    val startFunc12 = TestTree.Case.Function("Func12", null, TestTree.Status.FAIL)
+                    val startFunc21 = TestTree.Case.Function("Func21", null, TestTree.Status.QUEUE)
+                    val startFunc22 = TestTree.Case.Function("Func22", null, TestTree.Status.RUN)
+                    val startSuite1 =
+                        TestTree.Case("Suite1", "200", TestTree.Status.FAIL, listOf(startFunc11, startFunc12))
+                    val startSuite2 =
+                        TestTree.Case("Suite2", null, TestTree.Status.RUN, listOf(startFunc21, startFunc22))
+                    val startTree = TestTree(listOf(startSuite1, startSuite2))
+
+                    val resultFunc11 = TestTree.Case.Function("Func11", null, TestTree.Status.SUCCESS)
+                    val resultFunc12 = TestTree.Case.Function("Func12", null, TestTree.Status.FAIL)
+                    val resultFunc21 = TestTree.Case.Function("Func21", null, TestTree.Status.READY)
+                    val resultFunc22 = TestTree.Case.Function("Func22", null, TestTree.Status.READY)
+                    val resultSuite1 =
+                        TestTree.Case("Suite1", "200", TestTree.Status.FAIL, listOf(resultFunc11, resultFunc12))
+                    val resultSuite2 =
+                        TestTree.Case("Suite2", null, TestTree.Status.READY, listOf(resultFunc21, resultFunc22))
+                    val resultTree = TestTree(listOf(resultSuite1, resultSuite2), TestTree.Status.READY)
+
+                    FieldSetter.setField(service, service.javaClass.getDeclaredField("tree"), startTree)
+
                     service.stop()
                     verify(processMock).stop()
+                    verify(outputMock).didUpdateTestTree(resultTree)
                 }
             }
 
