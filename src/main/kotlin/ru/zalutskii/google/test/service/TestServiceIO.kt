@@ -12,12 +12,12 @@ interface TestServiceInput {
      *
      * @param file file to open.
      */
-    suspend fun open(file: File)
+    fun open(file: File)
 
     /**
      * Run tests from opened file.
      */
-    suspend fun run()
+    fun run()
 
     /**
      * Rerun failed tests.
@@ -25,12 +25,12 @@ interface TestServiceInput {
      * If test run hasn't failed test this method must call [TestServiceOutput.didFinishRun]
      * with current status of current tree.
      */
-    suspend fun rerunFailedTests()
+    fun rerunFailedTests()
 
     /**
      * Break current test run.
      */
-    suspend fun stop()
+    fun stop()
 
     /**
      * Request log for test function.
@@ -40,7 +40,7 @@ interface TestServiceInput {
      * @param suite test suite name
      * @param test test function name
      */
-    suspend fun showLog(suite: String, test: String)
+    fun changeLogTo(suite: String, test: String)
 
     /**
      * Request log for test suite.
@@ -49,14 +49,14 @@ interface TestServiceInput {
      *
      * @param suite test suite name
      */
-    suspend fun showLog(suite: String)
+    fun changeLogTo(suite: String)
 
     /**
      * Request log for test run.
      *
      * Should call [TestServiceOutput.didProcessOutput].
      */
-    suspend fun showLog()
+    fun changeLogTo()
 }
 
 interface TestServiceOutput {
@@ -65,26 +65,26 @@ interface TestServiceOutput {
      *
      * @param tree new test function tree.
      */
-    suspend fun didLoadTestTree(tree: TestTree)
+    fun didLoadTestTree(tree: TestTree)
 
     /**
      * Test tree has been updated.
      *
      * @param tree tree with updated statuses.
      */
-    suspend fun didUpdateTestTree(tree: TestTree)
+    fun didUpdateTestTree(tree: TestTree)
 
     /**
      * New test run log has been processed.
      *
      * @param log new log.
      */
-    suspend fun didProcessOutput(log: String)
+    fun didProcessOutput(log: String)
 
     /**
      * Test run has been finished.
      *
      * @param status of finished test run.
      */
-    suspend fun didFinishRun(status: TestTree.Status)
+    fun didFinishRun(status: TestTree.Status)
 }

@@ -80,9 +80,9 @@ class TestServiceSpec : BehaviorSpec() {
         outputMock = mock()
 
         logPerformerMock = mock {
-            onBlocking { getLogForTest(any(), any()) }.thenReturn("suite.test")
-            onBlocking { getLogForSuite(any()) }.thenReturn("suite")
-            onBlocking { getFullLog() }.thenReturn("Full log")
+            onBlocking { setCurrentLogTo(any(), any()) }.thenReturn("suite.test")
+            onBlocking { setCurrentLogTo(any()) }.thenReturn("suite")
+            onBlocking { setCurrentLogToRoot() }.thenReturn("Full log")
         }
 
         service = TestService(parserMock, processMock)
@@ -195,21 +195,21 @@ class TestServiceSpec : BehaviorSpec() {
 
             `when`("show log for test called") {
                 then("return new log to output") {
-                    service.showLog("suite", "test")
+                    service.changeLogTo("suite", "test")
                     verify(outputMock).didProcessOutput("suite.test")
                 }
             }
 
             `when`("show log for suite called") {
                 then("return new log to output") {
-                    service.showLog("suite")
+                    service.changeLogTo("suite")
                     verify(outputMock).didProcessOutput("suite")
                 }
             }
 
             `when`("show full log called") {
                 then("return new log to output") {
-                    service.showLog()
+                    service.changeLogTo()
                     verify(outputMock).didProcessOutput("Full log")
                 }
             }

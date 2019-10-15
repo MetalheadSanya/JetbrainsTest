@@ -2,7 +2,6 @@ package ru.zalutskii.google.test.ui.main
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.swing.Swing
 import ru.zalutskii.google.test.parser.list.TestTree
@@ -11,6 +10,7 @@ import ru.zalutskii.google.test.service.TestServiceOutput
 import ru.zalutskii.google.test.ui.openFile.OpenFileModuleOutput
 import java.io.File
 import javax.swing.tree.DefaultMutableTreeNode
+import javax.swing.tree.DefaultTreeModel
 import javax.swing.tree.TreePath
 
 class MainPresenter : MainViewOutput, OpenFileModuleOutput, TestServiceOutput,
@@ -19,6 +19,8 @@ class MainPresenter : MainViewOutput, OpenFileModuleOutput, TestServiceOutput,
     var view: MainViewInput? = null
     var router: MainRouterInput? = null
     var service: TestServiceInput? = null
+
+    private var treeModel: DefaultTreeModel? = null
 
     override fun didPressOpenFile() {
         router?.showOpenFile(this)
@@ -29,7 +31,6 @@ class MainPresenter : MainViewOutput, OpenFileModuleOutput, TestServiceOutput,
         view?.setRunActionEnabled(false)
         view?.setRunFailedActionEnabled(false)
         view?.setStopActionEnabled(true)
-        view?.setTestSelectionEnabled(false)
 
         launch {
             service?.run()
@@ -41,7 +42,6 @@ class MainPresenter : MainViewOutput, OpenFileModuleOutput, TestServiceOutput,
         view?.setRunActionEnabled(false)
         view?.setRunFailedActionEnabled(false)
         view?.setStopActionEnabled(true)
-        view?.setTestSelectionEnabled(false)
 
         launch {
             service?.rerunFailedTests()
@@ -58,13 +58,13 @@ class MainPresenter : MainViewOutput, OpenFileModuleOutput, TestServiceOutput,
         val viewModelPath = extractViewModels(path)
         when (viewModelPath.size) {
             3 -> launch {
-                service?.showLog(viewModelPath[1].name, viewModelPath[2].name)
+                service?.changeLogTo(viewModelPath[1].name, viewModelPath[2].name)
             }
             2 -> launch {
-                service?.showLog(viewModelPath[1].name)
+                service?.changeLogTo(viewModelPath[1].name)
             }
             else -> launch {
-                service?.showLog()
+                service?.changeLogTo()
             }
         }
     }
@@ -95,28 +95,65 @@ class MainPresenter : MainViewOutput, OpenFileModuleOutput, TestServiceOutput,
         }
     }
 
-    override suspend fun didLoadTestTree(tree: TestTree) {
+    override fun didLoadTestTree(tree: TestTree) {
 
         val rootNode = defaultMutableTreeNode(tree)
+        val treeModel = DefaultTreeModel(rootNode)
+        this.treeModel = treeModel
 
-        coroutineScope {
-            launch(Dispatchers.Swing) {
-                view?.setTreeNode(rootNode)
-                view?.setOpenActionEnabled(true)
-                view?.setRunActionEnabled(true)
-                view?.setRunFailedActionEnabled(false)
-                view?.setStopActionEnabled(false)
-            }
+        launch(Dispatchers.Swing) {
+            view?.setTreeModel(treeModel)
+            view?.setOpenActionEnabled(true)
+            view?.setRunActionEnabled(true)
+            view?.setRunFailedActionEnabled(false)
+            view?.setStopActionEnabled(false)
         }
     }
 
-    override suspend fun didUpdateTestTree(tree: TestTree) {
+    override fun didUpdateTestTree(tree: TestTree) {
         val rootNode = defaultMutableTreeNode(tree)
+        updateTreeNode(rootNode)
 
-        coroutineScope {
+
+    }
+
+    private fun updateTreeNode(rootNode: DefaultMutableTreeNode) {
+        val currentList = mutableListOf<DefaultMutableTreeNode>()
+        val newList = mutableListOf<DefaultMutableTreeNode>()
+
+        val currentTree = treeModel?.root as? DefaultMutableTreeNode
+        if (currentTree == null) {
             launch(Dispatchers.Swing) {
-                view?.setTreeNode(rootNode)
+                val treeModel = DefaultTreeModel(rootNode)
+                this@MainPresenter.treeModel = treeModel
+                view?.setTreeModel(treeModel)
             }
+            return
+        }
+
+        currentList.add(currentTree)
+        newList.add(rootNode)
+
+        val changedNodes = mutableListOf<DefaultMutableTreeNode>()
+
+        while (currentList.isNotEmpty()) {
+            val currentNode = currentList.removeAt(0)
+            val newNode = newList.removeAt(0)
+
+            currentList.addAll(currentNode.children().asSequence().map { it as DefaultMutableTreeNode })
+            newList.addAll(newNode.children().asSequence().map { it as DefaultMutableTreeNode })
+
+            val currentModel = currentNode.userObject as TestViewModel
+            val newModel = newNode.userObject as TestViewModel
+
+            if (currentModel != newModel) {
+                currentNode.userObject = newModel
+                changedNodes.add(currentNode)
+            }
+        }
+
+        launch(Dispatchers.Swing) {
+            changedNodes.forEach { treeModel?.nodeChanged(it) }
         }
     }
 
@@ -162,26 +199,21 @@ class MainPresenter : MainViewOutput, OpenFileModuleOutput, TestServiceOutput,
 
     private fun makeTimeText(time: String) = "($time ms)"
 
-    override suspend fun didProcessOutput(log: String) {
-        coroutineScope {
-            launch(Dispatchers.Swing) {
-                view?.setLog(log)
-            }
+    override fun didProcessOutput(log: String) {
+        launch(Dispatchers.Swing) {
+            view?.setLog(log)
         }
     }
 
-    override suspend fun didFinishRun(status: TestTree.Status) {
+    override fun didFinishRun(status: TestTree.Status) {
         val toastText = "Test run finished"
 
-        coroutineScope {
-            launch(Dispatchers.Swing) {
-                view?.setOpenActionEnabled(true)
-                view?.setRunActionEnabled(true)
-                view?.setRunFailedActionEnabled(status == TestTree.Status.FAIL)
-                view?.setStopActionEnabled(false)
-                view?.setTestSelectionEnabled(true)
-                view?.showToast(toastText)
-            }
+        launch(Dispatchers.Swing) {
+            view?.setOpenActionEnabled(true)
+            view?.setRunActionEnabled(true)
+            view?.setRunFailedActionEnabled(status == TestTree.Status.FAIL)
+            view?.setStopActionEnabled(false)
+            view?.showToast(toastText)
         }
     }
 }

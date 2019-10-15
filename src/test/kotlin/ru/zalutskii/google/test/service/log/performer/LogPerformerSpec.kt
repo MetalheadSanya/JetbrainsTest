@@ -316,6 +316,113 @@ class LogPerformerSpec : StringSpec() {
             )
         }
 
+        "test log by one test" {
+            val parser = mock<TestLogParser> {
+                on { parseToken(any()) }.doReturnConsecutively(
+                    listOf(
+                        UnknownToken("Running main() from /Users/zalutskii/Work/googleTest/googletest/src/gtest_main.cc"),
+                        RunToken("[==========] Running 6 tests from 2 test suites."),
+                        UnknownToken("[----------] Global test environment set-up."),
+                        SuiteStartToken("FactorialTest", 3, "[----------] 3 tests from FactorialTest"),
+                        RunTestToken("FactorialTest", "Negative", "[ RUN      ] FactorialTest.Negative"),
+                        OkTestToken("FactorialTest", "Negative", 0, "[       OK ] FactorialTest.Negative (0 ms)"),
+                        RunTestToken("FactorialTest", "Zero", "[ RUN      ] FactorialTest.Zero"),
+                        OkTestToken("FactorialTest", "Zero", 0, "[       OK ] FactorialTest.Zero (0 ms)"),
+                        RunTestToken("FactorialTest", "Positive", "[ RUN      ] FactorialTest.Positive"),
+                        OkTestToken("FactorialTest", "Positive", 0, "[       OK ] FactorialTest.Positive (0 ms)"),
+                        SuiteEndToken("FactorialTest", 3, 0, "[----------] 3 tests from FactorialTest (0 ms total)"),
+                        UnknownToken(""),
+                        SuiteStartToken("IsPrimeTest", 1, "[----------] 1 test from IsPrimeTest"),
+                        RunTestToken("IsPrimeTest", "Negative", "[ RUN      ] IsPrimeTest.Negative"),
+                        OkTestToken("IsPrimeTest", "Negative", 0, "[       OK ] IsPrimeTest.Negative (0 ms)"),
+                        SuiteEndToken("IsPrimeTest", 1, 0, "[----------] 1 test from IsPrimeTest (0 ms total)"),
+                        UnknownToken(""),
+                        UnknownToken("[----------] Global test environment tear-down"),
+                        StopToken("[==========] 6 tests from 2 test suites ran. (0 ms total)"),
+                        PassedToken(6, "[  PASSED  ] 6 tests."),
+                        null
+                    )
+                )
+            }
+
+            val outputMock = mock<LogPerformerOutput>()
+
+            val buffer = BufferedReader(StringReader(""))
+            val performer = LogPerformer(parser)
+            performer.output = outputMock
+            performer.setCurrentLogTo("FactorialTest")
+            performer.perform(buffer)
+
+            val order = inOrder(outputMock)
+
+            order.verify(outputMock).didStartTest()
+            order.verify(outputMock).didStartTestSuite("FactorialTest")
+            order.verify(outputMock).didProcessLog(
+                "[----------] 3 tests from FactorialTest"
+            )
+            order.verify(outputMock).didStartTest("FactorialTest", "Negative")
+            order.verify(outputMock).didProcessLog(
+                "[----------] 3 tests from FactorialTest\n" +
+                        "[ RUN      ] FactorialTest.Negative"
+            )
+            order.verify(outputMock).didPassTest("FactorialTest", "Negative", 0)
+            order.verify(outputMock).didProcessLog(
+                "[----------] 3 tests from FactorialTest\n" +
+                        "[ RUN      ] FactorialTest.Negative\n" +
+                        "[       OK ] FactorialTest.Negative (0 ms)"
+            )
+            order.verify(outputMock).didStartTest("FactorialTest", "Zero")
+            order.verify(outputMock).didProcessLog(
+                "[----------] 3 tests from FactorialTest\n" +
+                        "[ RUN      ] FactorialTest.Negative\n" +
+                        "[       OK ] FactorialTest.Negative (0 ms)\n" +
+                        "[ RUN      ] FactorialTest.Zero"
+            )
+            order.verify(outputMock).didPassTest("FactorialTest", "Zero", 0)
+            order.verify(outputMock).didProcessLog(
+                "[----------] 3 tests from FactorialTest\n" +
+                        "[ RUN      ] FactorialTest.Negative\n" +
+                        "[       OK ] FactorialTest.Negative (0 ms)\n" +
+                        "[ RUN      ] FactorialTest.Zero\n" +
+                        "[       OK ] FactorialTest.Zero (0 ms)"
+            )
+            order.verify(outputMock).didStartTest("FactorialTest", "Positive")
+            order.verify(outputMock).didProcessLog(
+                "[----------] 3 tests from FactorialTest\n" +
+                        "[ RUN      ] FactorialTest.Negative\n" +
+                        "[       OK ] FactorialTest.Negative (0 ms)\n" +
+                        "[ RUN      ] FactorialTest.Zero\n" +
+                        "[       OK ] FactorialTest.Zero (0 ms)\n" +
+                        "[ RUN      ] FactorialTest.Positive"
+            )
+            order.verify(outputMock).didPassTest("FactorialTest", "Positive", 0)
+            order.verify(outputMock).didProcessLog(
+                "[----------] 3 tests from FactorialTest\n" +
+                        "[ RUN      ] FactorialTest.Negative\n" +
+                        "[       OK ] FactorialTest.Negative (0 ms)\n" +
+                        "[ RUN      ] FactorialTest.Zero\n" +
+                        "[       OK ] FactorialTest.Zero (0 ms)\n" +
+                        "[ RUN      ] FactorialTest.Positive\n" +
+                        "[       OK ] FactorialTest.Positive (0 ms)"
+            )
+            order.verify(outputMock).didEndTestSuite("FactorialTest", 0)
+            order.verify(outputMock).didProcessLog(
+                "[----------] 3 tests from FactorialTest\n" +
+                        "[ RUN      ] FactorialTest.Negative\n" +
+                        "[       OK ] FactorialTest.Negative (0 ms)\n" +
+                        "[ RUN      ] FactorialTest.Zero\n" +
+                        "[       OK ] FactorialTest.Zero (0 ms)\n" +
+                        "[ RUN      ] FactorialTest.Positive\n" +
+                        "[       OK ] FactorialTest.Positive (0 ms)\n" +
+                        "[----------] 3 tests from FactorialTest (0 ms total)"
+            )
+            order.verify(outputMock).didStartTestSuite("IsPrimeTest")
+            order.verify(outputMock).didStartTest("IsPrimeTest", "Negative")
+            order.verify(outputMock).didPassTest("IsPrimeTest", "Negative", 0)
+            order.verify(outputMock).didEndTestSuite("IsPrimeTest", 0)
+            order.verify(outputMock).didEndTest()
+        }
+
         "test log with errors" {
             val parser = mock<TestLogParser> {
                 on { parseToken(any()) }.doReturnConsecutively(

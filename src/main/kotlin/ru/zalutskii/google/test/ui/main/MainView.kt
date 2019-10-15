@@ -6,8 +6,7 @@ import java.awt.Font
 import java.awt.Toolkit
 import java.awt.event.KeyEvent
 import javax.swing.*
-import javax.swing.tree.DefaultTreeModel
-import javax.swing.tree.TreeNode
+import javax.swing.tree.TreeModel
 
 
 class MainView : MainViewInput {
@@ -56,12 +55,15 @@ class MainView : MainViewInput {
         frame.isVisible = true
     }
 
-    override fun setTreeNode(treeNode: TreeNode) {
-        val model = DefaultTreeModel(treeNode)
-        testTree.model = model
+    override fun setTreeModel(treeModel: TreeModel) {
+        testTree.model = treeModel
         for (i in testTree.rowCount - 1 downTo 0) {
             testTree.expandRow(i)
         }
+    }
+
+    override fun updateTreeNode() {
+        testTree.treeDidChange()
     }
 
     override fun setOpenActionEnabled(enabled: Boolean) {
@@ -93,10 +95,6 @@ class MainView : MainViewInput {
         frame.glassPane.isVisible = true
         toastTimer.stop()
         toastTimer.start()
-    }
-
-    override fun setTestSelectionEnabled(enabled: Boolean) {
-        testTree.isEnabled = enabled
     }
 
     private fun createUi() {

@@ -8,7 +8,7 @@ interface LogPerformerInput {
      *
      * This method clean all saved log in performer.
      */
-    suspend fun reset()
+    fun reset()
 
     /**
      * Perform log from reader.
@@ -18,7 +18,7 @@ interface LogPerformerInput {
      *
      * @param reader log buffered reader.
      */
-    suspend fun perform(reader: BufferedReader)
+    fun perform(reader: BufferedReader)
 
     /**
      * Get log for concrete test function.
@@ -30,7 +30,7 @@ interface LogPerformerInput {
      *
      * @return log for test function.
      */
-    suspend fun getLogForTest(suite: String, test: String): String
+    fun setCurrentLogTo(suite: String, test: String): String
 
     /**
      * Get log for concrete test suite.
@@ -41,7 +41,7 @@ interface LogPerformerInput {
      *
      * @return log for test suite.
      */
-    suspend fun getLogForSuite(suite: String): String
+    fun setCurrentLogTo(suite: String): String
 
     /**
      * Get full log of test run.
@@ -50,7 +50,7 @@ interface LogPerformerInput {
      *
      * @return full log of test run.
      */
-    suspend fun getFullLog(): String
+    fun setCurrentLogToRoot(): String
 }
 
 interface LogPerformerOutput {
@@ -62,7 +62,7 @@ interface LogPerformerOutput {
      *
      * @param log processed log.
      */
-    suspend fun didProcessLog(log: String)
+    fun didProcessLog(log: String)
 
     /**
      * Test run has been started.
@@ -70,7 +70,7 @@ interface LogPerformerOutput {
      * [LogPerformerInput] must call this method when found in log line
      * that test has been started.
      */
-    suspend fun didStartTest()
+    fun didStartTest()
 
     /**
      * Test run has been ended.
@@ -78,7 +78,7 @@ interface LogPerformerOutput {
      * [LogPerformerInput] must call this method when found in log line
      * that test has been ended.
      */
-    suspend fun didEndTest()
+    fun didEndTest()
 
     /**
      * Test suite has been started.
@@ -88,7 +88,7 @@ interface LogPerformerOutput {
      *
      * @param suiteName name of started suite.
      */
-    suspend fun didStartTestSuite(suiteName: String)
+    fun didStartTestSuite(suiteName: String)
 
     /**
      * Test suite has been ended.
@@ -99,7 +99,7 @@ interface LogPerformerOutput {
      * @param suiteName name of ended suite.
      * @param milliseconds test suite execution time.
      */
-    suspend fun didEndTestSuite(suiteName: String, milliseconds: Int)
+    fun didEndTestSuite(suiteName: String, milliseconds: Int)
 
     /**
      * Test function has been started.
@@ -110,7 +110,7 @@ interface LogPerformerOutput {
      * @param suiteName name of test function suite.
      * @param testName name of test function.
      */
-    suspend fun didStartTest(suiteName: String, testName: String)
+    fun didStartTest(suiteName: String, testName: String)
 
     /**
      * Test function has been passed.
@@ -121,7 +121,7 @@ interface LogPerformerOutput {
      * @param suiteName name of passed suite.
      * @param milliseconds test function execution time.
      */
-    suspend fun didPassTest(suiteName: String, testName: String, milliseconds: Int)
+    fun didPassTest(suiteName: String, testName: String, milliseconds: Int)
 
     /**
      * Test function has been failed.
@@ -132,5 +132,5 @@ interface LogPerformerOutput {
      * @param suiteName name of failed suite.
      * @param milliseconds test function execution time.
      */
-    suspend fun didFailTest(suiteName: String, testName: String, milliseconds: Int)
+    fun didFailTest(suiteName: String, testName: String, milliseconds: Int)
 }

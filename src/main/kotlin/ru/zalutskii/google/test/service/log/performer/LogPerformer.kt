@@ -1,38 +1,27 @@
 package ru.zalutskii.google.test.service.log.performer
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.coroutineScope
 import ru.zalutskii.google.test.parser.log.*
 import java.io.BufferedReader
-import java.util.concurrent.Executors
-import kotlin.coroutines.CoroutineContext
 
-class LogPerformer(private val parser: TestLogParser) :
-    LogPerformerInput,
-    CoroutineScope {
-
-    override val coroutineContext: CoroutineContext = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+class LogPerformer(private val parser: TestLogParser) : LogPerformerInput {
 
     var output: LogPerformerOutput? = null
 
     private var log = ""
-    private var logBySuite = mapOf<String, String>()
-    private var logByTest = mapOf<String, String>()
+    private var logByTest = mutableMapOf<String, String>()
 
-    override suspend fun reset() = coroutineScope {
-        log = ""
-        logBySuite = mapOf()
-        logByTest = mapOf()
+    private var currentLog: String? = null
+
+    override fun reset() {
+        synchronized(this) {
+            log = ""
+            logByTest = mutableMapOf()
+        }
     }
 
-    override suspend fun perform(reader: BufferedReader) = coroutineScope {
+    override fun perform(reader: BufferedReader) {
         var currentTest: String? = null
         var currentSuite: String? = null
-
-        val log = StringBuilder()
-        val logBySuite = mutableMapOf<String, StringBuilder>()
-        val logByTest = mutableMapOf<String, StringBuilder>()
 
         loop@ while (true) {
             val token = parser.parseToken(reader)
@@ -68,12 +57,25 @@ class LogPerformer(private val parser: TestLogParser) :
                 null -> break@loop
             }
 
-            log.append(token.literal)
-            output?.didProcessLog(log.toString())
-            log.append("\n")
+            synchronized(this) {
+                log += token.literal
+                writeToLog(logByTest, currentSuite, token.literal)
+                writeToLog(logByTest, currentTest, token.literal)
 
-            writeToLog(logBySuite, currentSuite, token)
-            writeToLog(logByTest, currentTest, token)
+                if (currentLog == null) {
+                    output?.didProcessLog(log)
+                } else {
+                    val log = logByTest[currentLog ?: ""]
+                    if (log != null) {
+                        output?.didProcessLog(log)
+                    }
+                }
+
+                log += "\n"
+                writeToLog(logByTest, currentSuite, "\n")
+                writeToLog(logByTest, currentTest, "\n")
+            }
+
 
             when (token) {
                 is SuiteEndToken -> {
@@ -87,38 +89,39 @@ class LogPerformer(private val parser: TestLogParser) :
                 }
             }
         }
-
-        this@LogPerformer.log = log.toString()
-        this@LogPerformer.logBySuite = logBySuite.mapValues { builder -> builder.toString() }
-        this@LogPerformer.logByTest = logByTest.mapValues { builder -> builder.toString() }
     }
 
     private fun writeToLog(
-        logBuilders: MutableMap<String, StringBuilder>,
+        logBuilders: MutableMap<String, String>,
         key: String?,
-        token: Token
+        literal: String
     ) {
         if (key != null) {
             if (logBuilders[key] != null) {
-                logBuilders[key]?.append(token.literal)
+                logBuilders[key] += literal
             } else {
-                logBuilders[key] = StringBuilder(token.literal)
+                logBuilders[key] = literal
             }
-            logBuilders[key]?.append("\n")
         }
     }
 
 
-    override suspend fun getLogForTest(suite: String, test: String): String = coroutineScope {
-        logByTest["$suite.$test"] ?: ""
-    }
+    override fun setCurrentLogTo(suite: String, test: String): String =
+        synchronized(this) {
+            currentLog = "$suite.$test"
+            logByTest["$suite.$test"] ?: ""
+        }
 
-    override suspend fun getLogForSuite(suite: String): String = coroutineScope {
-        logBySuite[suite] ?: ""
-    }
+    override fun setCurrentLogTo(suite: String): String =
+        synchronized(this) {
+            currentLog = suite
+            logByTest[suite] ?: ""
+        }
 
-    override suspend fun getFullLog(): String = coroutineScope {
-        log
-    }
+    override fun setCurrentLogToRoot(): String =
+        synchronized(this) {
+            currentLog = null
+            log
+        }
 }
 
