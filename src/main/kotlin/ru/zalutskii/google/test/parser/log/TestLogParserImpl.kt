@@ -3,6 +3,16 @@ package ru.zalutskii.google.test.parser.log
 import java.io.BufferedReader
 
 class TestLogParserImpl : TestLogParser {
+    private val startRegex = "^Running \\d+ tests? from \\d+ test suites?.".toRegex()
+
+    private val endRegex = "^\\d+ tests? from \\d+ test suites? ran.".toRegex()
+
+    private val suiteStartRegex = "^\\d+ tests? from ".toRegex()
+
+    private val suiteEndRegex = "^\\d+ tests? from .*? \\(\\d+ ms total\\)$".toRegex()
+
+    private val failedTestRegex = "\\(\\d+ ms\\)$".toRegex()
+
     override fun parseToken(stream: BufferedReader): Token? {
         val line = stream.readLine()
 
@@ -23,8 +33,6 @@ class TestLogParserImpl : TestLogParser {
 
             when (tokenType) {
                 "==========" -> {
-                    val startRegex = "^Running \\d+ tests? from \\d+ test suites?.".toRegex()
-                    val endRegex = "^\\d+ tests? from \\d+ test suites? ran.".toRegex()
                     when {
                         startRegex.containsMatchIn(message) -> RunToken(line)
                         endRegex.containsMatchIn(message) -> StopToken(line)
@@ -32,8 +40,6 @@ class TestLogParserImpl : TestLogParser {
                     }
                 }
                 "----------" -> {
-                    val suiteStartRegex = "^\\d+ tests? from ".toRegex()
-                    val suiteEndRegex = "^\\d+ tests? from .*? \\(\\d+ ms total\\)$".toRegex()
                     when {
                         suiteEndRegex.containsMatchIn(message) -> parseSuiteEndToken(message, line)
                         suiteStartRegex.containsMatchIn(message) -> parseSuiteStartToken(message, line)
@@ -44,9 +50,8 @@ class TestLogParserImpl : TestLogParser {
                 "RUN" -> parseRunTestToken(message, line)
                 "OK" -> parseOkToken(message, line)
                 "FAILED" -> {
-                    val failedTestTokenRegex = "\\(\\d+ ms\\)$".toRegex()
                     when {
-                        failedTestTokenRegex.containsMatchIn(message) -> parseFailedTestToken(message, line)
+                        failedTestRegex.containsMatchIn(message) -> parseFailedTestToken(message, line)
                         else -> UnknownToken(line)
                     }
                 }
