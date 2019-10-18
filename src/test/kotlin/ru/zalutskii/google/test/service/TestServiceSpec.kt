@@ -10,6 +10,7 @@ import ru.zalutskii.google.test.parser.list.TestListParser
 import ru.zalutskii.google.test.parser.list.TestTree
 import ru.zalutskii.google.test.service.log.performer.LogPerformerInput
 import ru.zalutskii.google.test.service.process.TestProcess
+import ru.zalutskii.google.test.service.process.TestProcessFactory
 import java.io.BufferedReader
 import java.io.File
 import java.io.StringReader
@@ -58,6 +59,7 @@ class TestServiceSpec : BehaviorSpec() {
 
     private lateinit var parserMock: TestListParser
     private lateinit var processMock: TestProcess
+    private lateinit var processFactory: TestProcessFactory
     private lateinit var outputMock: TestServiceOutput
     private lateinit var logPerformerMock: LogPerformerInput
 
@@ -85,7 +87,11 @@ class TestServiceSpec : BehaviorSpec() {
             onBlocking { setCurrentLogToRoot() }.thenReturn("Full log")
         }
 
-        service = TestService(parserMock, processMock)
+        processFactory = mock {
+            onBlocking { createFromFile(any()) }.thenReturn(processMock)
+        }
+
+        service = TestService(parserMock, processFactory)
         service.output = outputMock
         service.logPerformer = logPerformerMock
     }
@@ -93,6 +99,10 @@ class TestServiceSpec : BehaviorSpec() {
     init {
         given("service") {
             `when`("open called") {
+                then("must create new process") {
+                    service.open(file)
+                    verify(processFactory).createFromFile(file)
+                }
                 then("log performer must be reset") {
                     service.open(file)
                     verify(logPerformerMock).reset()
@@ -110,26 +120,31 @@ class TestServiceSpec : BehaviorSpec() {
             `when`("run called") {
                 then("log performer must be reset") {
                     FieldSetter.setField(service, service.javaClass.getDeclaredField("tree"), readyTree)
+                    FieldSetter.setField(service, service.javaClass.getDeclaredField("process"), processMock)
                     service.run()
                     verify(logPerformerMock).reset()
                 }
                 then("test log must be reset") {
                     FieldSetter.setField(service, service.javaClass.getDeclaredField("tree"), readyTree)
+                    FieldSetter.setField(service, service.javaClass.getDeclaredField("process"), processMock)
                     service.run()
                     verify(outputMock).didProcessOutput("")
                 }
                 then("tree status must be queued") {
                     FieldSetter.setField(service, service.javaClass.getDeclaredField("tree"), readyTree)
+                    FieldSetter.setField(service, service.javaClass.getDeclaredField("process"), processMock)
                     service.run()
                     verify(outputMock).didUpdateTestTree(queuedTree)
                 }
                 then("test must be run") {
                     FieldSetter.setField(service, service.javaClass.getDeclaredField("tree"), readyTree)
+                    FieldSetter.setField(service, service.javaClass.getDeclaredField("process"), processMock)
                     service.run()
                     verify(processMock).runTestCases()
                 }
                 then("log performer must start process log") {
                     FieldSetter.setField(service, service.javaClass.getDeclaredField("tree"), readyTree)
+                    FieldSetter.setField(service, service.javaClass.getDeclaredField("process"), processMock)
                     service.run()
                     verify(logPerformerMock).perform(buffer)
                 }
@@ -158,6 +173,7 @@ class TestServiceSpec : BehaviorSpec() {
                     val resultTree = TestTree(listOf(resultSuite1, resultSuite2), TestTree.Status.READY)
 
                     FieldSetter.setField(service, service.javaClass.getDeclaredField("tree"), startTree)
+                    FieldSetter.setField(service, service.javaClass.getDeclaredField("process"), processMock)
 
                     service.stop()
                     verify(processMock).stop()
@@ -168,26 +184,31 @@ class TestServiceSpec : BehaviorSpec() {
             `when`("rerun failed tests called") {
                 then("log performer must be reset") {
                     FieldSetter.setField(service, service.javaClass.getDeclaredField("tree"), failedTree)
+                    FieldSetter.setField(service, service.javaClass.getDeclaredField("process"), processMock)
                     service.rerunFailedTests()
                     verify(logPerformerMock).reset()
                 }
                 then("test log must be reset") {
                     FieldSetter.setField(service, service.javaClass.getDeclaredField("tree"), failedTree)
+                    FieldSetter.setField(service, service.javaClass.getDeclaredField("process"), processMock)
                     service.rerunFailedTests()
                     verify(outputMock).didProcessOutput("")
                 }
                 then("tree status must be queued") {
                     FieldSetter.setField(service, service.javaClass.getDeclaredField("tree"), failedTree)
+                    FieldSetter.setField(service, service.javaClass.getDeclaredField("process"), processMock)
                     service.rerunFailedTests()
                     verify(outputMock).didUpdateTestTree(runFailedTree)
                 }
                 then("test must be run") {
                     FieldSetter.setField(service, service.javaClass.getDeclaredField("tree"), failedTree)
+                    FieldSetter.setField(service, service.javaClass.getDeclaredField("process"), processMock)
                     service.rerunFailedTests()
                     verify(processMock).runTests(listOf(testToRun))
                 }
                 then("log performer must start process log") {
                     FieldSetter.setField(service, service.javaClass.getDeclaredField("tree"), failedTree)
+                    FieldSetter.setField(service, service.javaClass.getDeclaredField("process"), processMock)
                     service.rerunFailedTests()
                     verify(logPerformerMock).perform(buffer)
                 }

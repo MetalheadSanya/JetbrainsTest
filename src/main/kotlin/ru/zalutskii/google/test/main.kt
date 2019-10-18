@@ -5,7 +5,7 @@ import ru.zalutskii.google.test.parser.list.TestListParserImpl
 import ru.zalutskii.google.test.parser.log.TestLogParserImpl
 import ru.zalutskii.google.test.service.TestService
 import ru.zalutskii.google.test.service.log.performer.LogPerformer
-import ru.zalutskii.google.test.service.process.TestProcessImpl
+import ru.zalutskii.google.test.service.process.TestProcessFactoryImpl
 import ru.zalutskii.google.test.ui.main.MainPresenter
 import ru.zalutskii.google.test.ui.main.MainRouter
 import ru.zalutskii.google.test.ui.main.MainView
@@ -18,12 +18,12 @@ fun createAndShowGui() {
     val presenter = MainPresenter()
     val router = MainRouter()
 
-    val process = TestProcessImpl()
+    val processFactory = TestProcessFactoryImpl
 
     val listLexer = TestListLexerImpl()
     val parser = TestListParserImpl(listLexer)
 
-    val service = TestService(parser, process)
+    val service = TestService(parser, processFactory)
 
     val logLexer = TestLogParserImpl()
     val logPerformer = LogPerformer(logLexer)

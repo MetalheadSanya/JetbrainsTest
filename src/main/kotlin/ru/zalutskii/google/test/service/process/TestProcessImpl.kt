@@ -5,23 +5,16 @@ import java.io.File
 import java.io.IOException
 import java.io.InputStreamReader
 
-class TestProcessImpl : TestProcess {
+class TestProcessImpl(private val path: String) : TestProcess {
 
     object FileHadNotBeenOpenedException : IOException("File had not been opened")
 
-    private lateinit var path: String
 
     private lateinit var process: Process
 
-    override fun open(file: File) {
-        path = file.absolutePath
-    }
+    constructor(file: File) : this(file.absolutePath)
 
     override fun readTestCases(): BufferedReader {
-        if (!::path.isInitialized) {
-            FileHadNotBeenOpenedException
-        }
-
         val command = listOf(path, "--gtest_list_tests")
         val process = ProcessBuilder()
             .command(command)
@@ -34,10 +27,6 @@ class TestProcessImpl : TestProcess {
     }
 
     override fun runTestCases(): BufferedReader {
-        if (!::path.isInitialized) {
-            throw FileHadNotBeenOpenedException
-        }
-
         val command = listOf(path)
         process = ProcessBuilder()
             .command(command)
@@ -50,10 +39,6 @@ class TestProcessImpl : TestProcess {
     }
 
     override fun runTests(list: Iterable<String>): BufferedReader {
-        if (!::path.isInitialized) {
-            FileHadNotBeenOpenedException
-        }
-
         val filter = "--gtest_filter=" + list.joinToString(":")
 
         val command = listOf(path, filter)

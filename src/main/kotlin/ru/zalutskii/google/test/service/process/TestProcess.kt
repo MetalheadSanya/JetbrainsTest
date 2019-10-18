@@ -1,16 +1,8 @@
 package ru.zalutskii.google.test.service.process
 
 import java.io.BufferedReader
-import java.io.File
 
 interface TestProcess {
-    /**
-     * Open file with tests.
-     *
-     * @param file executable file.
-     */
-    fun open(file: File)
-
     /**
      * Read test cases and functions from opened file.
      *

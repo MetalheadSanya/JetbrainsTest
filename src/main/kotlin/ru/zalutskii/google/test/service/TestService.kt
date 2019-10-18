@@ -5,25 +5,30 @@ import ru.zalutskii.google.test.parser.list.TestTree
 import ru.zalutskii.google.test.service.log.performer.LogPerformerInput
 import ru.zalutskii.google.test.service.log.performer.LogPerformerOutput
 import ru.zalutskii.google.test.service.process.TestProcess
+import ru.zalutskii.google.test.service.process.TestProcessFactory
 import java.io.File
 
 class TestService(
     private val parserImpl: TestListParser,
-    private val process: TestProcess
+    private val processFactory: TestProcessFactory
 ) : TestServiceInput, LogPerformerOutput {
 
     var output: TestServiceOutput? = null
     var logPerformer: LogPerformerInput? = null
 
+    private var process: TestProcess? = null
+
     private var tree: TestTree? = null
 
     override fun open(file: File) {
-        process.open(file)
+        val process = processFactory.createFromFile(file)
         logPerformer?.reset()
         val reader = process.readTestCases()
         val parsedTree = parserImpl.parseTree(reader)
 
         tree = parsedTree
+
+        this.process = process
 
         output?.didLoadTestTree(parsedTree)
         output?.didProcessOutput("")
@@ -40,8 +45,7 @@ class TestService(
             setLogStatus(TestTree.Status.QUEUE)
             tree?.let { output?.didUpdateTestTree(it) }
 
-            val reader = process.runTestCases()
-            logPerformer.perform(reader)
+            process?.runTestCases()?.let { logPerformer.perform(it) }
         } finally {
             output?.didFinishRun(getTreeStatus())
         }
@@ -77,8 +81,7 @@ class TestService(
             setFailedTestStatus(TestTree.Status.QUEUE)
             tree?.let { output?.didUpdateTestTree(it) }
 
-            val reader = process.runTests(failedTests)
-            logPerformer.perform(reader)
+            process?.runTests(failedTests)?.let { logPerformer.perform(it) }
         } finally {
             output?.didFinishRun(getTreeStatus())
         }
@@ -141,7 +144,7 @@ class TestService(
     }
 
     override fun stop() {
-        process.stop()
+        process?.stop()
         setUnfinishedTestsToReady()
         tree?.let { output?.didUpdateTestTree(it) }
     }
