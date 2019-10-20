@@ -1,11 +1,11 @@
 package ru.zalutskii.google.test.ui.main
 
-import javax.swing.tree.TreeModel
+import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.TreePath
 
 interface MainViewInput {
-    fun setTreeModel(treeModel: TreeModel)
-    fun updateTreeNode()
+    fun setTreeNode(treeNode: DefaultMutableTreeNode)
+    fun updateTreeNode(treeNode: DefaultMutableTreeNode)
 
     fun setOpenActionEnabled(enabled: Boolean)
     fun setRunActionEnabled(enabled: Boolean)

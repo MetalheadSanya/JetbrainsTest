@@ -1,15 +1,20 @@
 package ru.zalutskii.google.test.ui.main
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.swing.Swing
 import java.awt.Color
 import java.awt.Dimension
 import java.awt.Font
 import java.awt.Toolkit
 import java.awt.event.KeyEvent
 import javax.swing.*
-import javax.swing.tree.TreeModel
+import javax.swing.tree.DefaultMutableTreeNode
+import javax.swing.tree.DefaultTreeModel
 
 
-class MainView : MainViewInput {
+class MainView : MainViewInput, CoroutineScope by CoroutineScope(Dispatchers.Swing) {
 
     val frame: JFrame = JFrame()
 
@@ -38,6 +43,8 @@ class MainView : MainViewInput {
 
     var output: MainViewOutput? = null
 
+    var treeModel: DefaultTreeModel? = null
+
     init {
         toastTimer = Timer(3000) {
             hideToast()
@@ -48,53 +55,104 @@ class MainView : MainViewInput {
     }
 
     private fun hideToast() {
-        frame.glassPane.isVisible = false
-    }
-
-    fun show() {
-        frame.isVisible = true
-    }
-
-    override fun setTreeModel(treeModel: TreeModel) {
-        testTree.model = treeModel
-        for (i in testTree.rowCount - 1 downTo 0) {
-            testTree.expandRow(i)
+        launch {
+            frame.glassPane.isVisible = false
         }
     }
 
-    override fun updateTreeNode() {
-        testTree.treeDidChange()
+    fun show() {
+        launch {
+            frame.isVisible = true
+        }
+    }
+
+    override fun setTreeNode(treeNode: DefaultMutableTreeNode) {
+        launch {
+            treeModel = DefaultTreeModel(treeNode)
+            testTree.model = treeModel
+            for (i in testTree.rowCount - 1 downTo 0) {
+                testTree.expandRow(i)
+            }
+        }
+    }
+
+    override fun updateTreeNode(treeNode: DefaultMutableTreeNode) {
+        val currentList = mutableListOf<DefaultMutableTreeNode>()
+        val newList = mutableListOf<DefaultMutableTreeNode>()
+
+        val currentTree = treeModel?.root as? DefaultMutableTreeNode
+        if (currentTree == null) {
+            setTreeNode(treeNode)
+            return
+        }
+
+        currentList.add(currentTree)
+        newList.add(treeNode)
+
+        val changedNodes = mutableListOf<DefaultMutableTreeNode>()
+
+        while (currentList.isNotEmpty()) {
+            val currentNode = currentList.removeAt(0)
+            val newNode = newList.removeAt(0)
+
+            currentList.addAll(currentNode.children().asSequence().map { it as DefaultMutableTreeNode })
+            newList.addAll(newNode.children().asSequence().map { it as DefaultMutableTreeNode })
+
+            val currentModel = currentNode.userObject as TestViewModel
+            val newModel = newNode.userObject as TestViewModel
+
+            if (currentModel != newModel) {
+                currentNode.userObject = newModel
+                changedNodes.add(currentNode)
+            }
+        }
+
+        launch {
+            changedNodes.forEach { treeModel?.nodeChanged(it) }
+        }
     }
 
     override fun setOpenActionEnabled(enabled: Boolean) {
-        openItem.isEnabled = enabled
-        openButton.isEnabled = enabled
+        launch {
+            openItem.isEnabled = enabled
+            openButton.isEnabled = enabled
+        }
     }
 
     override fun setRunActionEnabled(enabled: Boolean) {
-        runItem.isEnabled = enabled
-        runButton.isEnabled = enabled
+        launch {
+            runItem.isEnabled = enabled
+            runButton.isEnabled = enabled
+        }
     }
 
     override fun setStopActionEnabled(enabled: Boolean) {
-        stopItem.isEnabled = enabled
-        stopButton.isEnabled = enabled
+        launch {
+            stopItem.isEnabled = enabled
+            stopButton.isEnabled = enabled
+        }
     }
 
     override fun setRunFailedActionEnabled(enabled: Boolean) {
-        runFailedItem.isEnabled = enabled
-        runFailedButton.isEnabled = enabled
+        launch {
+            runFailedItem.isEnabled = enabled
+            runFailedButton.isEnabled = enabled
+        }
     }
 
     override fun setLog(log: String) {
-        logArea.text = log
+        launch {
+            logArea.text = log
+        }
     }
 
     override fun showToast(text: String) {
-        toastLabel.text = text
-        frame.glassPane.isVisible = true
-        toastTimer.stop()
-        toastTimer.start()
+        launch {
+            toastLabel.text = text
+            frame.glassPane.isVisible = true
+            toastTimer.stop()
+            toastTimer.start()
+        }
     }
 
     private fun createUi() {
